@@ -1,0 +1,484 @@
+﻿@page "/"
+@using BlazorApp2.Share
+@using System.Text.Json
+@inject HttpClient Http
+@inject IJSRuntime JSRuntime
+@inject PdfGenerator PdfGenerator
+@inject NavigationManager Navigation
+
+<PageTitle>Red Vial</PageTitle>
+
+<h1>detalle semaforo!</h1>
+
+<div class="d-flex gap-2 mb-3">
+    <button @onclick="SimularCambios" class="btn btn-primary">
+        Simular Cambios
+    </button>
+    <button @onclick="TraerDetalle" class="btn btn-primary">
+        Cargar Detalle
+    </button>
+    <button @onclick="BorrarTodosRegistros" class="btn btn-primary">
+        Borrar Todos los Registros
+    </button>
+    <button @onclick="DescargarPdf" class="btn btn-primary">
+        Exportar
+    </button>
+</div>
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger">
+        @mensajeError
+    </div>
+}
+
+
+@if (ContenedorDatos != null && ContenedorDatos.TotalItems > 0)
+{
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            Mostrando @((paginaActual - 1) * 10 + 1)-@Math.Min(paginaActual * 10, ContenedorDatos.TotalItems)
+            de @ContenedorDatos.TotalItems registros
+        </div>
+        <div>
+            <button @onclick="() => CambiarPagina(1)"
+            class="btn btn-outline-primary btn-sm"
+            disabled="@(paginaActual == 1)">
+                &lt;&lt;
+            </button>
+            <button @onclick="() => CambiarPagina(paginaActual - 1)"
+            class="btn btn-outline-primary btn-sm mx-1"
+            disabled="@(paginaActual == 1)">
+                &lt;
+            </button>
+            <span class="mx-2">Página @paginaActual de @totalPaginas</span>
+            <button @onclick="() => CambiarPagina(paginaActual + 1)"
+            class="btn btn-outline-primary btn-sm mx-1"
+            disabled="@(paginaActual == totalPaginas)">
+                &gt;
+            </button>
+            <button @onclick="() => CambiarPagina(totalPaginas)"
+            class="btn btn-outline-primary btn-sm"
+            disabled="@(paginaActual == totalPaginas)">
+                &gt;&gt;
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Nodo ID</th>
+                    <th>Dirección</th>
+                    <th>Total Cambios</th>
+                    <th>Vehículos Esperados</th>
+                    <th>Promedio por Cambio</th>
+                    <th>Tiempo Promedio (s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < 10; i++)
+                {
+                    var item = ContenedorDatos.GetItem(i);
+                    @if (item != null)
+                    {
+                        <tr>
+                            <td>@item.NodoId</td>
+                            <td>@item.DireccionSemaforo</td>
+                            <td>@item.totalCambios</td>
+                            <td>@item.SumaCantidadEspera</td>
+                            <td>@item.PromedioVehiculosPorCambio.ToString("F2")</td>
+                            <td>@item.TiempoPromedioPorCarro.ToString("F2")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+else if (ContenedorDatos != null)
+{
+    <div class="alert alert-warning">
+        No hay datos disponibles.
+    </div>
+}
+
+
+@if (ContenedorFiltrado != null && ContenedorFiltrado.TotalItems > 0)
+{
+    <h3 class="mt-4">Resultados Filtrados</h3>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div>
+            Mostrando @((paginaFiltroActual - 1) * 10 + 1)-@Math.Min(paginaFiltroActual * 10, ContenedorFiltrado.TotalItems)
+            de @ContenedorFiltrado.TotalItems registros
+        </div>
+        <div>
+            <button @onclick="() => CambiarPaginaFiltro(1)"
+            class="btn btn-outline-primary btn-sm"
+            disabled="@(paginaFiltroActual == 1)">
+                &lt;&lt;
+            </button>
+            <button @onclick="() => CambiarPaginaFiltro(paginaFiltroActual - 1)"
+            class="btn btn-outline-primary btn-sm mx-1"
+            disabled="@(paginaFiltroActual == 1)">
+                &lt;
+            </button>
+            <span class="mx-2">Página @paginaFiltroActual de @totalPaginasFiltro</span>
+            <button @onclick="() => CambiarPaginaFiltro(paginaFiltroActual + 1)"
+            class="btn btn-outline-primary btn-sm mx-1"
+            disabled="@(paginaFiltroActual == totalPaginasFiltro)">
+                &gt;
+            </button>
+            <button @onclick="() => CambiarPaginaFiltro(totalPaginasFiltro)"
+            class="btn btn-outline-primary btn-sm"
+            disabled="@(paginaFiltroActual == totalPaginasFiltro)">
+                &gt;&gt;
+            </button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Nodo ID</th>
+                    <th>Dirección</th>
+                    <th>Total Cambios</th>
+                    <th>Vehículos Esperados</th>
+                    <th>Promedio por Cambio</th>
+                    <th>Tiempo Promedio (s)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < 10; i++)
+                {
+                    var item = ContenedorFiltrado.GetItem(i);
+                    @if (item != null)
+                    {
+                        <tr>
+                            <td>@item.NodoId</td>
+                            <td>@item.DireccionSemaforo</td>
+                            <td>@item.totalCambios</td>
+                            <td>@item.SumaCantidadEspera</td>
+                            <td>@item.PromedioVehiculosPorCambio.ToString("F2")</td>
+                            <td>@item.TiempoPromedioPorCarro.ToString("F2")</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5>Filtrar Semáforos</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <label for="nodoId" class="form-label">Nodo ID:</label>
+                <select @bind="nodoIdFiltro" class="form-select" id="nodoId">
+                    <option value="">Obligatorio</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="direccion" class="form-label">Dirección:</label>
+                <select @bind="direccionFiltro" class="form-select" id="direccion">
+                    <option value="">Obligatorio</option>
+                    <option value="Vertical">Vertical</option>
+                    <option value="Horizontal">Horizontal</option>
+                    <option value="">Ambos</option>
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button @onclick="FiltrarCombinado" class="btn btn-primary">
+                    @if (isLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <span class="visually-hidden">Cargando...</span>
+                    }
+                    Buscar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@if (isClientSide)
+{
+    <script suppress-error="BL9992">
+        // Versión mejorada con verificación de errores
+        function downloadFile(base64Data, fileName, mimeType) {
+        try {
+        console.log("Iniciando descarga...");
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], {type: mimeType});
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpieza
+        setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        console.log("Descarga completada");
+        }, 100);
+        } catch (error) {
+        console.error("Error en downloadFile:", error);
+        }
+        }
+    </script>
+}
+
+
+@code {
+    private DetalleSemaforoContainer? ContenedorDatos;
+    private DetalleSemaforoContainer? ContenedorFiltrado;
+    private DetalleSemaforo? detalleSemaforo;
+    private bool isLoading = false;
+    private int? nodoIdFiltro;
+    private string direccionFiltro = "";
+    private string mensajeError = "";
+    private string conexionServidor = "en espera...";
+    private string conexionDetalleSemaforo = "en espera...";
+    private string conexionestadisticaSemaforo = "en espera...";
+    private string Detalle = "procesando";
+    private bool isClientSide = false;
+
+
+    private int paginaActual = 1;
+    private int totalPaginas = 1;
+
+
+    private int paginaFiltroActual = 1;
+    private int totalPaginasFiltro = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ProbarConexion();
+        await TraerDetalle();
+    }
+
+    async Task ProbarConexion()
+    {
+        try
+        {
+            conexionServidor = await Http.GetStringAsync("https://localhost:7108/api/DetalleSemaforo/ConexionServidor");
+            conexionDetalleSemaforo = await Http.GetStringAsync("https://localhost:7108/api/DetalleSemaforo/ConexionDetalleSemaforoDetalle");
+            conexionestadisticaSemaforo = await Http.GetStringAsync("https://localhost:7108/api/DetalleSemaforo/ConexionDetalleSemaforoEsta");
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error de conexión: {ex.Message}";
+        }
+    }
+
+    private async Task TraerDetalle()
+    {
+        try
+        {
+            ContenedorDatos = await Http.GetFromJsonAsync<DetalleSemaforoContainer>(
+                $"https://localhost:7108/api/DetalleSemaforo/ObtenerDetalle?pagina={paginaActual}");
+
+            if (ContenedorDatos != null)
+            {
+                totalPaginas = (int)Math.Ceiling(ContenedorDatos.TotalItems / 10.0);
+            }
+
+            mensajeError = "";
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al obtener datos: {ex.Message}";
+            ContenedorDatos = null;
+        }
+    }
+
+    private async Task CambiarPagina(int nuevaPagina)
+    {
+        if (nuevaPagina < 1 || nuevaPagina > totalPaginas)
+            return;
+
+        paginaActual = nuevaPagina;
+        await TraerDetalle();
+    }
+
+    private async Task FiltrarCombinado()
+    {
+        isLoading = true;
+        mensajeError = "";
+        paginaFiltroActual = 1; 
+
+        try
+        {
+            var url = $"https://localhost:7108/api/DetalleSemaforo/ObtenerFiltradoCombinado?pagina={paginaFiltroActual}";
+
+            if (nodoIdFiltro.HasValue)
+                url += $"&nodoId={nodoIdFiltro}";
+
+            if (!string.IsNullOrEmpty(direccionFiltro))
+                url += $"&direccion={Uri.EscapeDataString(direccionFiltro)}";
+
+            ContenedorFiltrado = await Http.GetFromJsonAsync<DetalleSemaforoContainer>(url);
+
+            if (ContenedorFiltrado != null)
+            {
+                totalPaginasFiltro = (int)Math.Ceiling(ContenedorFiltrado.TotalItems / 10.0);
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error: {ex.Message}";
+            ContenedorFiltrado = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CambiarPaginaFiltro(int nuevaPagina)
+    {
+        if (nuevaPagina < 1 || nuevaPagina > totalPaginasFiltro)
+            return;
+
+        paginaFiltroActual = nuevaPagina;
+        await FiltrarCombinado();
+    }
+
+    private async Task SimularCambios()
+    {
+        var random = new Random();
+        mensajeError = "";
+
+        try
+        {
+
+            for (int nodoId = 1; nodoId <= 5; nodoId++)
+            {
+
+                foreach (var direccion in new[] { "Vertical", "Horizontal" })
+                {
+
+                    detalleSemaforo = new DetalleSemaforo(nodoId, direccion);
+
+
+                    int totalCambios = random.Next(5, 15);
+                    for (int i = 0; i < totalCambios; i++)
+                    {
+                        detalleSemaforo.RegistrarCambioEstado(
+                            random.Next(5, 20),    
+                            random.Next(20, 40),   
+                            random.Next(5, 15),    
+                            random.Next(15, 30)    
+                        );
+                    }
+
+
+                    detalleSemaforo.FinalizarRegistro();
+
+
+                    var response = await Http.PostAsJsonAsync(
+                        "https://localhost:7108/api/DetalleSemaforo/GuardarSemaforo",
+                        detalleSemaforo
+
+                    );
+
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        mensajeError += $"Error guardando nodo {nodoId} ({direccion}). ";
+
+                    }
+
+
+                    await Task.Delay(100);
+                }
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error durante simulación: {ex.Message}";
+        }
+    }
+
+    private async Task BorrarTodosRegistros()
+    {
+        try
+        {
+            var response = await Http.DeleteAsync("https://localhost:7108/api/DetalleSemaforo/BorrarTodos");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var resultado = await response.Content.ReadAsStringAsync();
+                mensajeError = "";
+                await TraerDetalle();
+                await FiltrarCombinado();
+                Console.WriteLine(resultado);
+            }
+            else
+            {
+                mensajeError = "Error al borrar registros";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error: {ex.Message}";
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) isClientSide = true;
+    }
+
+    private async Task DescargarPdf()
+    {
+        try
+        {
+            Console.WriteLine($"Total items: {ContenedorDatos?.TotalItems ?? 0}");
+
+            var pdfBytes = PdfGenerator.GeneratePdfFromTable(ContenedorDatos);
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                mensajeError = "Error: El PDF generado está vacío";
+                return;
+            }
+
+            Console.WriteLine($"PDF generado - Tamaño: {pdfBytes.Length} bytes");
+
+            await JSRuntime.InvokeVoidAsync(
+                "downloadFile",
+                Convert.ToBase64String(pdfBytes),
+                $"Reporte_{DateTime.Now:yyyyMMddHHmmss}.pdf",
+                "application/pdf"
+            );
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error: {ex.Message}";
+            Console.WriteLine(ex.ToString());
+        }
+    }
+}
