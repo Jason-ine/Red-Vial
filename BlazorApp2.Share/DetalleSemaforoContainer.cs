@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BlazorApp2.Share
 {
-    public class DetalleSemaforoContainer
+    public class DetalleSemaforoContainer : BaseContainer
     {
         public DetalleSemaforo? Item1 { get; set; }
         public DetalleSemaforo? Item2 { get; set; }
@@ -18,7 +18,6 @@ namespace BlazorApp2.Share
         public DetalleSemaforo? Item8 { get; set; }
         public DetalleSemaforo? Item9 { get; set; }
         public DetalleSemaforo? Item10 { get; set; }
-        public int TotalItems { get; set; }
 
         public DetalleSemaforo? GetItem(int index)
         {

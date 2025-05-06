@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using iText.Kernel.Pdf;
 using iText.Layout;
 using iText.Layout.Element;
@@ -17,7 +13,7 @@ namespace BlazorApp2.Share
 {
     public class PdfGenerator
     {
-        public byte[] GeneratePdfFromTable(DetalleSemaforoContainer contenedor)
+        public byte[] GeneratePdfFromContainer(BaseContainer contenedor, string tipoAnalisis)
         {
             if (contenedor?.TotalItems == 0)
             {
@@ -47,38 +43,34 @@ namespace BlazorApp2.Share
                     fontBold = PdfFontFactory.CreateFont(StandardFonts.COURIER_BOLD);
                 }
 
-                document.Add(new Paragraph("Reporte de Semáforos")
+                
+                string titulo = tipoAnalisis switch
+                {
+                    "0" => "Reporte Detallado de Semáforos",
+                    "1" => "Intersecciones con Mayor Congestión",
+                    "2" => "Análisis de Cuellos de Botella",
+                    _ => "Reporte de Semáforos"
+                };
+
+                document.Add(new Paragraph(titulo)
                     .SetFont(fontBold)
                     .SetFontSize(16)
                     .SetTextAlignment(TextAlignment.CENTER));
 
-                var table = new Table(UnitValue.CreatePercentArray(6)).UseAllAvailableWidth();
-
-                string[] headers = { "Nodo ID", "Dirección", "Cambios", "Vehículos", "Promedio", "Tiempo (s)" };
-                foreach (var header in headers)
+               
+                switch (tipoAnalisis)
                 {
-                    var cell = new Cell()
-                        .Add(new Paragraph(header ?? string.Empty)
-                        .SetFont(fontBold)
-                        .SetFontColor(ColorConstants.WHITE));
-                    cell.SetBackgroundColor(new DeviceRgb(33, 150, 243));
-                    table.AddHeaderCell(cell);
+                    case "0":
+                        GenerateDetalleSemaforoTable(document, contenedor as DetalleSemaforoContainer, fontNormal, fontBold);
+                        break;
+                    case "1":
+                        GenerateInterseccionesTable(document, contenedor as InterseccionCongestionadaContainer, fontNormal, fontBold);
+                        break;
+                    case "2":
+                        GenerateCuellosBotellaTable(document, contenedor as CuelloBotellaContainer, fontNormal, fontBold);
+                        break;
                 }
 
-                for (int i = 0; i < (contenedor?.TotalItems ?? 0); i++)
-                {
-                    var item = contenedor?.GetItem(i);
-                    if (item == null) continue;
-
-                    table.AddCell(SafeCell(item.NodoId.ToString(), fontNormal));
-                    table.AddCell(SafeCell(item.DireccionSemaforo, fontNormal));
-                    table.AddCell(SafeCell(item.totalCambios.ToString(), fontNormal));
-                    table.AddCell(SafeCell(item.SumaCantidadEspera.ToString(), fontNormal));
-                    table.AddCell(SafeCell(item.PromedioVehiculosPorCambio.ToString("F2"), fontNormal));
-                    table.AddCell(SafeCell(item.TiempoPromedioPorCarro.ToString("F2"), fontNormal));
-                }
-
-                document.Add(table);
                 document.Close();
 
                 if (stream.Length == 0)
@@ -94,6 +86,85 @@ namespace BlazorApp2.Share
             finally
             {
                 writer?.Close();
+            }
+        }
+
+        private void GenerateDetalleSemaforoTable(Document document, DetalleSemaforoContainer contenedor, PdfFont fontNormal, PdfFont fontBold)
+        {
+            var table = new Table(UnitValue.CreatePercentArray(6)).UseAllAvailableWidth();
+
+            string[] headers = { "Nodo ID", "Dirección", "Cambios", "Vehículos esperados", "Promedio vehículos/cambio", "Tiempo (s)" };
+            AddTableHeaders(table, headers, fontBold);
+
+            for (int i = 0; i < 10; i++)
+            {
+                var item = contenedor?.GetItem(i);
+                if (item == null) continue;
+
+                table.AddCell(SafeCell(item.NodoId.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.DireccionSemaforo, fontNormal));
+                table.AddCell(SafeCell(item.totalCambios.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.SumaCantidadEspera.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.PromedioVehiculosPorCambio.ToString("F2"), fontNormal));
+                table.AddCell(SafeCell(item.TiempoPromedioPorCarro.ToString("F2"), fontNormal));
+            }
+
+            document.Add(table);
+        }
+
+        private void GenerateInterseccionesTable(Document document, InterseccionCongestionadaContainer contenedor, PdfFont fontNormal, PdfFont fontBold)
+        {
+            var table = new Table(UnitValue.CreatePercentArray(4)).UseAllAvailableWidth();
+
+            string[] headers = { "Nodo ID", "Total Vehículos", "Total Cambios", "Indicador Congestión" };
+            AddTableHeaders(table, headers, fontBold);
+
+            for (int i = 0; i < 3; i++)
+            {
+                var item = contenedor?.GetItem(i);
+                if (item == null) continue;
+
+                table.AddCell(SafeCell(item.NodoId.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.TotalVehiculos.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.TotalCambios.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.IndicadorCongestion.ToString("F2"), fontNormal));
+            }
+
+            document.Add(table);
+        }
+
+        private void GenerateCuellosBotellaTable(Document document, CuelloBotellaContainer contenedor, PdfFont fontNormal, PdfFont fontBold)
+        {
+            var table = new Table(UnitValue.CreatePercentArray(5)).UseAllAvailableWidth();
+
+            string[] headers = { "Nodo ID", "Dirección", "Total Cambios", "Vehículos Esperados", "Indicador Congestión" };
+            AddTableHeaders(table, headers, fontBold);
+
+            for (int i = 0; i < 10; i++)
+            {
+                var item = contenedor?.GetItem(i);
+                if (item == null) continue;
+
+                table.AddCell(SafeCell(item.NodoId.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.DireccionSemaforo, fontNormal));
+                table.AddCell(SafeCell(item.TotalCambios.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.SumaCantidadEspera.ToString(), fontNormal));
+                table.AddCell(SafeCell(item.IndicadorCongestion.ToString("F2"), fontNormal));
+            }
+
+            document.Add(table);
+        }
+
+        private void AddTableHeaders(Table table, string[] headers, PdfFont fontBold)
+        {
+            foreach (var header in headers)
+            {
+                var cell = new Cell()
+                    .Add(new Paragraph(header ?? string.Empty)
+                    .SetFont(fontBold)
+                    .SetFontColor(ColorConstants.WHITE));
+                cell.SetBackgroundColor(new DeviceRgb(33, 150, 243));
+                table.AddHeaderCell(cell);
             }
         }
 

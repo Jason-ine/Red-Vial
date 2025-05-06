@@ -36,19 +36,7 @@ namespace BlazorApp2.Controller
                 return "error de conexion con la tabla DetalleSemaforo";
             }
         }
-        [HttpGet("ConexionDetalleSemaforoEsta")]
-        public async Task<ActionResult<string>> GetConexionDetalleSemaforoDetalleEsta()
-        {
-            try
-            {
-                var respuesta = await _context.EstadisticaSemaforo.ToListAsync();
-                return "conectado con la tabla EstadisticaSemaforo";
-            }
-            catch (Exception ex)
-            {
-                return "error de conexion con la tabla EstditticaSemaforo";
-            }
-        }
+        
         [HttpPost("GuardarSemaforo")]
         public async Task<IActionResult> GuardarSemaforo([FromBody] DetalleSemaforo semaforo)
         {
@@ -145,6 +133,49 @@ namespace BlazorApp2.Controller
                 return StatusCode(500, $"Error al borrar registros: {ex.Message}");
             }
         }
+        [HttpGet("InterseccionesMasCongestionadas")]
+        public async Task<ActionResult<InterseccionCongestionadaContainer>> GetInterseccionesMasCongestionadas()
+        {
+            var result = new InterseccionCongestionadaContainer();
+
+            var data = await _context.InterseccionesCongestionadas
+                .FromSqlRaw("EXEC InterseccionesMasCongestionadas")
+                .ToListAsync();
+
+            if (data.Count > 0) result.Item1 = data[0];
+            if (data.Count > 1) result.Item2 = data[1];
+            if (data.Count > 2) result.Item3 = data[2];
+
+            result.TotalItems = data.Count;
+
+            return Ok(result);
+        }
+
+        [HttpGet("AnalisisCuelloBotella")]
+        public async Task<ActionResult<CuelloBotellaContainer>> GetAnalisisCuelloBotella()
+        {
+            var result = new CuelloBotellaContainer();
+
+            var data = await _context.CuellosBotella
+                .FromSqlRaw("EXEC AnalisisCuelloBotella")
+                .ToListAsync();
+
+            if (data.Count > 0) result.Item1 = data[0];
+            if (data.Count > 1) result.Item2 = data[1];
+            if (data.Count > 2) result.Item3 = data[2];
+            if (data.Count > 3) result.Item4 = data[3];
+            if (data.Count > 4) result.Item5 = data[4];
+            if (data.Count > 5) result.Item6 = data[5];
+            if (data.Count > 6) result.Item7 = data[6];
+            if (data.Count > 7) result.Item8 = data[7];
+            if (data.Count > 8) result.Item9 = data[8];
+            if (data.Count > 9) result.Item10 = data[9];
+
+            result.TotalItems = data.Count;
+
+            return Ok(result);
+        }
+
 
     }
 }
