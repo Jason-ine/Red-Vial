@@ -10,8 +10,8 @@ namespace BlazorApp2.Share
     {
         private Nodo NodoInicio;
 
-        public NodoServicios() 
-        { 
+        public NodoServicios()
+        {
             NodoInicio = null;
         }
 
@@ -23,6 +23,15 @@ namespace BlazorApp2.Share
         public Nodo ObtenerNodoInicio()
         {
             return NodoInicio;
+        }
+
+        private Boolean NodoVacio(Nodo nodo)
+        {
+            if (nodo == null)
+            {
+                Console.WriteLine("Nodo no encontrado.");
+            }
+            return nodo == null;
         }
 
         public void AgregarNodo(Nodo nodoReferencia, string direccion, Nodo nuevoNodo)
@@ -56,7 +65,7 @@ namespace BlazorApp2.Share
                         Console.WriteLine("Ya existe un nodo abajo.");
                     }
                     break;
-                case "izquierda": 
+                case "izquierda":
                     if (nodoReferencia.ReferenciaIzquierda == null)
                     {
                         nodoReferencia.ReferenciaIzquierda = nuevoNodo;
@@ -84,5 +93,39 @@ namespace BlazorApp2.Share
 
             }
         }
+
+        public void ModificarInformacion(Nodo nodo, object nuevaInformacion)
+        {
+            if (NodoVacio(nodo)) return;
+            
+            nodo.Informacion = nuevaInformacion;
+            Console.WriteLine("Información actualizada");
+        }
+        
+        public void ActivarSemaforo(Nodo nodo)
+        {
+            if (NodoVacio(nodo)) return;
+
+            nodo.TieneSemaforo = true;
+            Console.WriteLine("Semaforo activado.");
+        }
+
+        public void DesactivarSemaforo(Nodo nodo)
+        {
+            if (NodoVacio(nodo)) return;
+
+            nodo.TieneSemaforo = false;
+            Console.WriteLine("Semaforo desactivado.");
+        }
+
+        public void ActualizarConteoVehiculos(Nodo nodo, int nuevoConteoActual, int nuevoConteoHistorico)
+        {
+            if (NodoVacio(nodo)) return;
+
+            nodo.ConteoActualVehiculos = nuevoConteoActual;
+            nodo.ConteoHistoricoVehiculos = nuevoConteoHistorico;
+            Console.WriteLine("Conteo de vehiculos actualizado");
+        }
+
     }
 }
