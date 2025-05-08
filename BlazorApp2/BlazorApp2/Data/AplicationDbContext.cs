@@ -17,5 +17,7 @@ namespace BlazorApp2.Data
         public DbSet<DetalleSemaforo> DetalleSemaforo { get; set; }
         public DbSet<InterseccionCongestionada> InterseccionesCongestionadas { get; set; }
         public DbSet<CuelloBotella> CuellosBotella { get; set; }
+
+        public DbSet<SemaforoEstadistica> SemaforoEstadisticas { get; set; }
     }
 }

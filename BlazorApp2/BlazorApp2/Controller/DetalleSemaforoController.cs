@@ -73,12 +73,12 @@ namespace BlazorApp2.Controller
         }
 
         [HttpGet("ObtenerFiltradoCombinado")]
-        public async Task<ActionResult<DetalleSemaforoContainer>> GetFiltradoCombinado(
+        public async Task<ActionResult<SemaforoEstadisticaContainer>> GetFiltradoCombinado(
         [FromQuery] int? nodoId = null,
         [FromQuery] string? direccion = null,
         [FromQuery] int pagina = 1)
         {
-            var query = _context.DetalleSemaforo.AsQueryable();
+            var query = _context.SemaforoEstadisticas.AsQueryable();
 
             if (nodoId.HasValue)
                 query = query.Where(d => d.NodoId == nodoId.Value);
@@ -87,7 +87,7 @@ namespace BlazorApp2.Controller
                 query = query.Where(d => EF.Functions.Like(d.DireccionSemaforo, $"%{direccion}%"));
 
             var totalItems = await query.CountAsync();
-            var contenedor = new DetalleSemaforoContainer
+            var contenedor = new SemaforoEstadisticaContainer
             {
                 TotalItems = totalItems,
                 Item1 = await query.Skip((pagina - 1) * 10 + 0).FirstOrDefaultAsync(),
@@ -110,29 +110,45 @@ namespace BlazorApp2.Controller
             try
             {
                 int registrosBorrados = 0;
-                bool hayMasRegistros = true;
+                bool hayMasRegistrosDetalleSemaforo = true;
+                bool hayMasRegistrosSemaforoEstadistica = true;
 
-                while (hayMasRegistros)
+                while (hayMasRegistrosDetalleSemaforo)
                 {
-                    var registro = await _context.DetalleSemaforo.FirstOrDefaultAsync();
+                    var registroDetalle = await _context.DetalleSemaforo.FirstOrDefaultAsync();
 
-                    if (registro == null)
+                    if (registroDetalle == null)
                     {
-                        hayMasRegistros = false;
+                        hayMasRegistrosDetalleSemaforo = false;
                         continue;
                     }
 
-                    _context.DetalleSemaforo.Remove(registro);
+                    _context.DetalleSemaforo.Remove(registroDetalle);
                     registrosBorrados += await _context.SaveChangesAsync();
                 }
 
-                return Ok($"Se borraron {registrosBorrados} registros correctamente");
+                while (hayMasRegistrosSemaforoEstadistica)
+                {
+                    var registroEstadistica = await _context.SemaforoEstadisticas.FirstOrDefaultAsync();
+
+                    if (registroEstadistica == null)
+                    {
+                        hayMasRegistrosSemaforoEstadistica = false;
+                        continue;
+                    }
+
+                    _context.SemaforoEstadisticas.Remove(registroEstadistica);
+                    registrosBorrados += await _context.SaveChangesAsync();
+                }
+
+                return Ok($"Se borraron {registrosBorrados} registros correctamente.");
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error al borrar registros: {ex.Message}");
             }
         }
+
         [HttpGet("InterseccionesMasCongestionadas")]
         public async Task<ActionResult<InterseccionCongestionadaContainer>> GetInterseccionesMasCongestionadas()
         {
@@ -175,6 +191,20 @@ namespace BlazorApp2.Controller
 
             return Ok(result);
         }
+        [HttpPost("EjecutarEstadisticas")]
+        public async Task<IActionResult> EjecutarEstadisticas()
+        {
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync("EXEC sp_InsertarOActualizarEstadisticas");
+                return Ok(new { mensaje = "Estadísticas procesadas correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message, stackTrace = ex.StackTrace });
+            }
+        }
+
 
 
     }
