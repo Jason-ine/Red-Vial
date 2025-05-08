@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,18 +11,38 @@ namespace BlazorApp2.Share
 
     public class Nodo
     {
+        private int _conteoVehiculos;
         public Nodo ReferenciaIzquierda { get; set; }
         public Nodo ReferenciaDerecha { get; set; }
         public Nodo ReferenciaArriba { get; set; }
         public Nodo ReferenciaAbajo { get; set; }
         public object Informacion { get; set; }
         public bool TieneSemaforo { get; set; }
+        public Semaforo semaforo { get; set; }
+        public int VehiculosEnEsperaVertical { get; set; }
+        public int VehiculosEnEsperaHorizontal { get; set; }
+        public int TotalVehiculosPasados { get; set; }
 
-        // public Semaforo semaforo { get; set; } por implementar
-        public int ConteoHistoricoVehiculos { get; set; }
+
+        public int ConteoHistoricoVehiculos
+        {
+            get => _conteoVehiculos;
+            set
+            {
+                if (_conteoVehiculos < 0)
+                {
+                    _conteoVehiculos = 0;
+                }
+                else
+                {
+                    _conteoVehiculos = value;
+                }
+            }
+        }
         public int ConteoActualVehiculos { get; set; }
         public bool Visitado { get; set; } = false; 
-
+        public int PosX { get; set; }
+        public int PosY { get; set; }
 
         public Nodo()
         {
@@ -31,8 +52,12 @@ namespace BlazorApp2.Share
             ReferenciaAbajo = null;
             Informacion = null;
             TieneSemaforo = false;
+            TieneSemaforo = false;
             ConteoHistoricoVehiculos = 0;
             ConteoActualVehiculos = 0;
+            VehiculosEnEsperaVertical = 0;
+            VehiculosEnEsperaHorizontal = 0;
+            TotalVehiculosPasados = 0;
         }
 
 
@@ -46,10 +71,14 @@ namespace BlazorApp2.Share
             TieneSemaforo = tieneSemaforo;
             ConteoHistoricoVehiculos = conteoHistoricoVehiculos;
             ConteoActualVehiculos = conteoActualVehiculos;
+
         }
 
         private static void LimpiarVisitados(Nodo actual)
         {
+            
+
+
             if (actual == null || !actual.Visitado)
                 return;
 
@@ -108,6 +137,58 @@ namespace BlazorApp2.Share
             }
         }
 
+
+        public async Task<int> SacarVehiculosDelNodo(Nodo nodoActual)
+        {
+            int VehiculosPasaron = 0;
+
+            if (ConteoActualVehiculos != 0)
+            {
+                while(Semaforo.EstadoVertical)
+                {
+                    Console.WriteLine("Pasó un vehículo");
+                    VehiculosPasaron++;
+                    ConteoActualVehiculos--;
+                    TotalVehiculosPasados++; 
+                    await Task.Delay(225);
+                }
+            }
+            else
+            {
+                Debug.WriteLine("No hay vehículos en el nodo");
+            }
+
+            return VehiculosPasaron;
+        }
+
+        public void LlegadaVehiculo(bool esVertical)
+        {
+            if (esVertical)
+            {
+                VehiculosEnEsperaVertical++;
+            }
+            else
+            {
+                VehiculosEnEsperaHorizontal++;
+            }
+            ConteoActualVehiculos++; 
+        }
+
+        public void DecrementarVehiculosEnEspera(bool esVertical, int cantidad)
+        {
+            if (esVertical)
+            {
+                VehiculosEnEsperaVertical -= cantidad;
+                if (VehiculosEnEsperaVertical < 0)
+                    VehiculosEnEsperaVertical = 0;
+            }
+            else
+            {
+                VehiculosEnEsperaHorizontal -= cantidad;
+                if (VehiculosEnEsperaHorizontal < 0)
+                    VehiculosEnEsperaHorizontal = 0;
+            }
+        }
 
     }
 }
