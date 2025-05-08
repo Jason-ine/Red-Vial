@@ -61,7 +61,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     public string valorFinal = "";
 
     private IJSObjectReference? module;
-    
+
     public Nodo nodo1 = new Nodo();
     public Nodo nodo2 = new Nodo(); 
     public Nodo nodo3 = new Nodo();
@@ -74,7 +74,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     string resultado = "";
     bool estadoV;
     bool estadoH;
-    
+
     protected override async Task OnInitializedAsync()
     {
         _ = Semaforo.IniciarSemaforo();
@@ -105,45 +105,105 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         estadoH = Semaforo.EstadoHorizontal;
         Semaforo.OnEstadoChanged += Actualizar;
 
+        //NODO 1
         nodo1.ReferenciaDerecha = nodo2;
         nodo1.Informacion = "Nodo 1";
+        nodo1.TieneSemaforo = false;
+
+        nodo1.viaDerecha = true;
+        nodo1.viaIzquierda = false;
+        nodo1.viaArriba = false;
+        nodo1.viaAbajo = false;
+
         nodo1.ConteoActualVehiculos = 10;
 
+        //NODO 2
         nodo2.ReferenciaDerecha = nodo3;
         nodo2.ReferenciaAbajo = nodo5;
         nodo2.TieneSemaforo = true;
+
+        nodo2.viaDerecha = true;
+        nodo2.viaIzquierda = false;
+        nodo2.viaArriba = false;
+        nodo2.viaAbajo = true;
+
         nodo2.Informacion = "Nodo 2";
 
+        //NODO 3
         nodo3.ReferenciaAbajo = nodo6;
         nodo3.Informacion = "Nodo 3";
+        nodo3.TieneSemaforo = false;
 
+        nodo3.viaDerecha = false;
+        nodo3.viaIzquierda = false;
+        nodo3.viaArriba = false;
+        nodo3.viaAbajo = true;
+
+        //Nodo 4
         nodo4.ReferenciaDerecha = nodo5;
         nodo4.ReferenciaArriba = nodo1;
-        nodo4.TieneSemaforo = true;
         nodo4.Informacion = "Nodo 4";
+        nodo4.TieneSemaforo = true;
 
+        nodo4.viaDerecha = true;
+        nodo4.viaIzquierda = false;
+        nodo4.viaArriba = true;
+        nodo4.viaAbajo = false;
+
+        //Nodo 5
         nodo5.ReferenciaDerecha = nodo6;
         nodo5.ReferenciaIzquierda = nodo4;
         nodo5.ReferenciaAbajo = nodo8;
         nodo5.ReferenciaArriba = nodo2;
-        nodo5.TieneSemaforo = true;
         nodo5.Informacion = "Nodo 5";
+        nodo5.TieneSemaforo = true;
 
+        nodo5.viaDerecha = true;
+        nodo5.viaIzquierda = true;
+        nodo5.viaArriba = true;
+        nodo5.viaAbajo = true;
+
+        //Nodo 6
         nodo6.ReferenciaAbajo = nodo9;
         nodo6.ReferenciaIzquierda = nodo5;
-        nodo6.TieneSemaforo = true;
         nodo6.Informacion = "Nodo 6";
+        nodo6.TieneSemaforo = true;
 
+        nodo6.viaDerecha = false;
+        nodo6.viaIzquierda = true;
+        nodo6.viaArriba = false;
+        nodo6.viaAbajo = true;
+
+        //Nodo 7
         nodo7.ReferenciaArriba = nodo4;
         nodo7.Informacion = "Nodo 7";
+        nodo7.TieneSemaforo = false;
 
+        nodo7.viaDerecha = false;
+        nodo7.viaIzquierda = false;
+        nodo7.viaArriba = true;
+        nodo7.viaAbajo = false;
+
+        //Nodo 8
         nodo8.ReferenciaIzquierda = nodo7;
         nodo8.ReferenciaArriba = nodo5;
         nodo8.TieneSemaforo = true;
         nodo8.Informacion = "Nodo 8";
 
+        nodo8.viaDerecha = false;
+        nodo8.viaIzquierda = true;
+        nodo8.viaArriba = true;
+        nodo8.viaAbajo = false;
+
+        //Nodo 9
         nodo9.ReferenciaIzquierda = nodo8;
         nodo9.Informacion = "Nodo 9";
+        nodo9.TieneSemaforo = false;
+
+        nodo9.viaDerecha = false;
+        nodo9.viaIzquierda = true;
+        nodo9.viaArriba = false;
+        nodo9.viaAbajo = false;
 
         nodo1.PosX = 100; nodo1.PosY = 100;
         nodo2.PosX = 300; nodo2.PosY = 100;
