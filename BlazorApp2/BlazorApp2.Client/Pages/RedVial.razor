@@ -7,14 +7,44 @@
 
 <PageTitle>Red Vial</PageTitle>
 
-
-
-
 <h1>Red Vial</h1>
 
+<div class="mb-3">
+    <button class="btn btn-success me-2" @onclick="IniciarSimulacion">Iniciar Simulación</button>
+    <button class="btn btn-danger" @onclick="DetenerSimulacion">Detener Simulación</button>
+</div>
 
-<canvas @ref="mapaCanvasRef" width="600" height="600"
-style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+<div class="d-flex flex-row align-items-start gap-4">
+    <canvas @ref="mapaCanvasRef" width="600" height="600"
+            style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+
+    @if (vehiculos.Any())
+    {
+        <table class="table table-striped w-auto">
+            <thead>
+                <tr>
+                    <th>Vehículo</th>
+                    <th>Intersección Anterior</th>
+                    <th>Intersección Actual</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var vehiculo in vehiculos)
+                {
+                    var rowClass = vehiculo.SeMovio ? "table-warning" : "";
+                    <tr class="@rowClass">
+                        <td>@vehiculo.Id</td>
+                        <td>@vehiculo.NodoAnterior</td>
+                        <td>@vehiculo.NodoActual.Informacion</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+
+
 
 <select @bind="valorInicio" class="form-select" aria-label="Seleccione el Nodo Inicial" required>
     <option value="" disabled selected hidden>Nodo Inicial...</option>
@@ -60,6 +90,11 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     public string valorInicio = "";
     public string valorFinal = "";
 
+    private List<Vehiculo> vehiculos = new();
+    private bool simulacionActiva = false;
+    private System.Timers.Timer? temporizador;
+    private Random aleatorio = new();
+
     private IJSObjectReference? module;
 
     public Nodo nodo1 = new Nodo();
@@ -71,6 +106,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     public Nodo nodo7 = new Nodo();
     public Nodo nodo8 = new Nodo();
     public Nodo nodo9 = new Nodo();
+    private Nodo NodoInicio => nodo1;
     string resultado = "";
     bool estadoV;
     bool estadoH;
@@ -107,7 +143,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
         //NODO 1
         nodo1.ReferenciaDerecha = nodo2;
-        nodo1.Informacion = "Nodo 1";
+        nodo1.Informacion = "-1-";
         nodo1.TieneSemaforo = false;
 
         nodo1.viaDerecha = true;
@@ -127,11 +163,11 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo2.viaArriba = false;
         nodo2.viaAbajo = true;
 
-        nodo2.Informacion = "Nodo 2";
+        nodo2.Informacion = "-2-";
 
         //NODO 3
         nodo3.ReferenciaAbajo = nodo6;
-        nodo3.Informacion = "Nodo 3";
+        nodo3.Informacion = "-3-";
         nodo3.TieneSemaforo = false;
 
         nodo3.viaDerecha = false;
@@ -142,7 +178,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         //Nodo 4
         nodo4.ReferenciaDerecha = nodo5;
         nodo4.ReferenciaArriba = nodo1;
-        nodo4.Informacion = "Nodo 4";
+        nodo4.Informacion = "-4-";
         nodo4.TieneSemaforo = true;
 
         nodo4.viaDerecha = true;
@@ -155,10 +191,10 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo5.ReferenciaIzquierda = nodo4;
         nodo5.ReferenciaAbajo = nodo8;
         nodo5.ReferenciaArriba = nodo2;
-        nodo5.Informacion = "Nodo 5";
+        nodo5.Informacion = "-5-";
         nodo5.TieneSemaforo = true;
 
-        nodo5.viaDerecha = true;
+		nodo5.viaDerecha = true;
         nodo5.viaIzquierda = true;
         nodo5.viaArriba = true;
         nodo5.viaAbajo = true;
@@ -166,7 +202,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         //Nodo 6
         nodo6.ReferenciaAbajo = nodo9;
         nodo6.ReferenciaIzquierda = nodo5;
-        nodo6.Informacion = "Nodo 6";
+        nodo6.Informacion = "-6-";
         nodo6.TieneSemaforo = true;
 
         nodo6.viaDerecha = false;
@@ -176,7 +212,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
         //Nodo 7
         nodo7.ReferenciaArriba = nodo4;
-        nodo7.Informacion = "Nodo 7";
+        nodo7.Informacion = "-7-";
         nodo7.TieneSemaforo = false;
 
         nodo7.viaDerecha = false;
@@ -188,7 +224,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo8.ReferenciaIzquierda = nodo7;
         nodo8.ReferenciaArriba = nodo5;
         nodo8.TieneSemaforo = true;
-        nodo8.Informacion = "Nodo 8";
+        nodo8.Informacion = "-8-";
 
         nodo8.viaDerecha = false;
         nodo8.viaIzquierda = true;
@@ -197,7 +233,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
         //Nodo 9
         nodo9.ReferenciaIzquierda = nodo8;
-        nodo9.Informacion = "Nodo 9";
+        nodo9.Informacion = "-9-";
         nodo9.TieneSemaforo = false;
 
         nodo9.viaDerecha = false;
@@ -232,8 +268,6 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
 
 
-
-
     private async Task DibujarMapaEnCanvasDesdeBlazor()
     {
         try
@@ -260,13 +294,16 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
 
             var nodos = new[] { nodo1, nodo2, nodo3, nodo4, nodo5, nodo6, nodo7, nodo8, nodo9 };
+
+            await DibujarConexiones();
+
             foreach (var nodo in nodos)
             {
                 await DibujarNodoEnCanvas(nodo);
             }
 
 
-            await DibujarConexiones();
+            
 
             Console.WriteLine("Mapa dibujado completamente");
         }
@@ -319,7 +356,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         }
     }
     private async Task DibujarConexiones()
-{
+    {
     var conexiones = new List<(Nodo, Nodo, bool)>
     {
         (nodo1, nodo1.ReferenciaDerecha, false),
@@ -387,5 +424,127 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     public void CircularVehiculos(){
        
     }
+
+
+    private void IniciarSimulacion()
+    {
+        if (simulacionActiva)
+            return;
+
+        simulacionActiva = true;
+        InicializarVehiculos(10); // Puedes ajustar el número de vehículos
+
+        temporizador = new System.Timers.Timer(1000); // Intervalo de 1 segundo
+        temporizador.Elapsed += (sender, args) =>
+        {
+            if (simulacionActiva)
+            {
+                MoverVehiculos();
+                InvokeAsync(StateHasChanged);
+            }
+        };
+        temporizador.Start();
+    }
+
+    private void DetenerSimulacion()
+    {
+        simulacionActiva = false;
+        temporizador?.Stop();
+        temporizador?.Dispose();
+    }
+
+    private void InicializarVehiculos(int cantidad)
+    {
+        vehiculos.Clear();
+        var nodosDisponibles = ObtenerTodosLosNodos();
+        for (int i = 0; i < cantidad; i++)
+        {
+            var nodoInicial = nodosDisponibles[aleatorio.Next(nodosDisponibles.Count)];
+            vehiculos.Add(new Vehiculo { Id = i + 1, NodoActual = nodoInicial });
+        }
+    }
+
+    private void MoverVehiculos()
+    {
+        foreach (var vehiculo in vehiculos)
+        {
+            var nodo = vehiculo.NodoActual;
+            var direcciones = new List<Nodo?>
+            {
+                nodo.ReferenciaArriba,
+                nodo.ReferenciaAbajo,
+                nodo.ReferenciaIzquierda,
+                nodo.ReferenciaDerecha
+            }.Where(n => n != null).ToList();
+
+            if (direcciones.Count == 0)
+                continue;
+
+            var siguienteNodo = direcciones[aleatorio.Next(direcciones.Count)];
+
+            if (siguienteNodo != null)
+            {
+                // Simular semáforo: si tiene semáforo y está en rojo, el vehículo espera
+                if (siguienteNodo.TieneSemaforo && aleatorio.Next(2) == 0) // 50% de probabilidad de estar en rojo
+                {
+                    continue;
+                }
+
+                vehiculo.NodoAnterior = vehiculo.NodoActual.Informacion?.ToString() ?? "";
+                vehiculo.NodoActual = siguienteNodo;
+                vehiculo.SeMovio = true;
+                _ = Task.Run(async () =>
+                {
+                await Task.Delay(900); // un poco antes del próximo tick
+                    vehiculo.SeMovio = false;
+                });
+            }
+        }
+    }
+
+  
+    private List<Nodo> ObtenerTodosLosNodos()
+    {
+        var nodos = new List<Nodo>();
+        var visitados = new HashSet<Nodo>();
+        var cola = new Queue<Nodo>();
+
+        if (NodoInicio != null)
+        {
+            cola.Enqueue(NodoInicio);
+            visitados.Add(NodoInicio);
+        }
+
+        while (cola.Count > 0)
+        {
+            var actual = cola.Dequeue();
+            nodos.Add(actual);
+
+            var vecinos = new List<Nodo?>
+            {
+                actual.ReferenciaArriba,
+                actual.ReferenciaAbajo,
+                actual.ReferenciaIzquierda,
+                actual.ReferenciaDerecha
+            };
+
+            foreach (var vecino in vecinos)
+            {
+                if (vecino != null && !visitados.Contains(vecino))
+                {
+                    visitados.Add(vecino);
+                    cola.Enqueue(vecino);
+                }
+            }
+        }
+
+        return nodos;
+    }
+
+    /*private class Vehiculo
+    {
+        public int Id { get; set; }
+        public Nodo NodoActual { get; set; } = null!;
+    }*/
 
 }

@@ -14,35 +14,8 @@
     console.log("Canvas limpiado");
 }
 
-export function dibujarNodoIndividual(canvas, nodoRecibido) {
-    let nodo = JSON.parse(nodoRecibido);
-    nodo = nodo[0];
-    console.log("Intentando dibujar nodo:", nodo);
-    console.log(nodo.PosX + " y " + nodo.PosY)
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
 
-    
-    ctx.fillStyle = '#3498db';
 
-    ctx.beginPath();
-    ctx.arc(nodo.PosX, nodo.PosY, 20, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Dibujar semáforo si existe
-    if (nodo.TieneSemaforo) {
-        ctx.fillStyle = '#f1c40f';
-        ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
-    }
-
-    // Texto del nodo
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 5);
-
-    console.log("Nodo dibujado:", nodo.Informacion);
-}
 
 export function dibujarCalleIndividual(canvas, calleRecibida) {
     let calle = JSON.parse(calleRecibida);
@@ -118,7 +91,8 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
     ctx.lineTo(calle.HastaX, calle.HastaY);
     ctx.stroke();
     ctx.setLineDash([]); 
-  //  dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY);
+    //  dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY);
+
 }
 
 function dibujarFlecha(ctx, fromX, fromY, toX, toY) {
@@ -140,4 +114,34 @@ function dibujarFlecha(ctx, fromX, fromY, toX, toY) {
     );
     ctx.closePath();
     ctx.fill();
+}
+
+export function dibujarNodoIndividual(canvas, nodoRecibido) {
+    let nodo = JSON.parse(nodoRecibido);
+    nodo = nodo[0];
+    console.log("Intentando dibujar nodo:", nodo);
+    console.log(nodo.PosX + " y " + nodo.PosY)
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+
+    ctx.fillStyle = '#3498db';
+
+    ctx.beginPath();
+    ctx.arc(nodo.PosX, nodo.PosY, 20, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dibujar semáforo si existe
+    if (nodo.TieneSemaforo) {
+        ctx.fillStyle = '#f1c40f';
+        ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
+    }
+
+    // Texto del nodo
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 5);
+
+    console.log("Nodo dibujado:", nodo.Informacion);
 }
