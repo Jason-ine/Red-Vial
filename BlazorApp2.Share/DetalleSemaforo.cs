@@ -15,7 +15,6 @@ namespace BlazorApp2.Share
         public string DireccionSemaforo { get; set; }
         public int SumaCantidadEspera { get; set; } = 0;
         public double PromedioVehiculosPorCambio { get; set; } = 0;
-        public double TiempoCrucePromedio { get; set; } = 0;
         public double TiempoPromedioPorCarro { get; set; } = 0;
         public int totalCambios { get; set; } = 0;
 
@@ -53,8 +52,8 @@ namespace BlazorApp2.Share
 
             PromedioVehiculosPorCambio = (double)sumaVehiculosPasaron / totalCambios;
             double tiempoEsperaPromedio = (sumaTiempoRojo / (double)totalCambios) / 2.0;
-            TiempoCrucePromedio = (double)sumaTiempoVerde / sumaVehiculosPasaron;
-            TiempoPromedioPorCarro = tiempoEsperaPromedio + TiempoCrucePromedio;
+            double tiempoCrucePromedio = (double)sumaTiempoVerde / sumaVehiculosPasaron;
+            TiempoPromedioPorCarro = tiempoEsperaPromedio + tiempoCrucePromedio;
         }
 
         public void ReiniciarAcumuladores()

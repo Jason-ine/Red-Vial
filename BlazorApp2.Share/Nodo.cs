@@ -18,10 +18,6 @@ namespace BlazorApp2.Share
         public Nodo ReferenciaAbajo { get; set; }
         public object Informacion { get; set; }
         public bool TieneSemaforo { get; set; }
-        public bool viaDerecha { get; set; }
-        public bool viaIzquierda { get; set; }
-        public bool viaArriba { get; set; }
-        public bool viaAbajo {  get; set; }
         public Semaforo semaforo { get; set; }
         public int VehiculosEnEsperaVertical { get; set; }
         public int VehiculosEnEsperaHorizontal { get; set; }
