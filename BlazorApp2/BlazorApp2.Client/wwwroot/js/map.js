@@ -136,19 +136,77 @@ export function dibujarNodoIndividual(canvas, nodoRecibido) {
     ctx.arc(nodo.PosX, nodo.PosY, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dibujar semáforo si existe
-    //if (nodo.TieneSemaforo) {
-     //   ctx.fillStyle = '#f1c40f';
-       // ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
-    //}
-
     // Texto del nodo
     ctx.fillStyle = 'white';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 7);
 
-
-
     console.log("Nodo dibujado:", nodo.Informacion);
+
+    // Mostrar conteo de vehiculos esperando
+    if (nodo.ConteoActualVehiculos > 0) {
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`🚗 ${nodo.ConteoActualVehiculos}`, nodo.PosX, nodo.PosY + 30);
+    }
 }
+
+export function dibujarRutaDeNodos(stringDeNodos, canvasRuta) {
+    let ctxRuta = canvasRuta.getContext('2d');
+    if (!ctxRuta) return;
+
+    stringDeNodos = stringDeNodos.trim().replace(/;$/, '');
+    let arregloDeNodos = stringDeNodos.split(";");
+
+    let espacioX = 70; // espacio horizontal
+    let x = 50;         // posición inicial x
+    let y = 50;         // posición fija y
+    let radio = 20;
+
+    for (let i = 0; i < arregloDeNodos.length; i++) {
+        // Dibuja el nodo (círculo)
+        ctxRuta.fillStyle = '#3498db';
+        ctxRuta.beginPath();
+        ctxRuta.arc(x, y, radio, 0, Math.PI * 2);
+        ctxRuta.fill();
+
+        // Dibuja el texto del nodo
+        ctxRuta.fillStyle = 'white';
+        ctxRuta.font = 'bold 12px Arial';
+        ctxRuta.textAlign = 'center';
+        ctxRuta.textBaseline = 'middle';
+        ctxRuta.fillText(arregloDeNodos[i], x, y);
+
+        // Si no es el último nodo, dibuja una flecha hacia el siguiente
+        if (i < arregloDeNodos.length - 1) {
+            let inicioX = x + radio;
+            let finX = x + espacioX - radio;
+            let puntaX = finX;
+            let puntaY = y;
+
+            // Línea
+            ctxRuta.strokeStyle = '#000';
+            ctxRuta.lineWidth = 2;
+            ctxRuta.beginPath();
+            ctxRuta.moveTo(inicioX, y);
+            ctxRuta.lineTo(finX, y);
+            ctxRuta.stroke();
+
+            // Cabeza de flecha
+            let tamFlecha = 6;
+            ctxRuta.beginPath();
+            ctxRuta.moveTo(puntaX, puntaY);
+            ctxRuta.lineTo(puntaX - tamFlecha, puntaY - tamFlecha);
+            ctxRuta.lineTo(puntaX - tamFlecha, puntaY + tamFlecha);
+            ctxRuta.closePath();
+            ctxRuta.fillStyle = '#000';
+            ctxRuta.fill();
+        }
+
+        x += espacioX;
+    }
+}
+
+    

@@ -18,4 +18,8 @@
     <ProjectReference Include="..\..\BlazorApp2.Share\BlazorApp2.Share.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="wwwroot\images\mapa.png" />
+  </ItemGroup>
+
 </Project>

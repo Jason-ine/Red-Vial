@@ -16,7 +16,7 @@
 
 <div class="d-flex flex-row align-items-start gap-4">
     <canvas @ref="mapaCanvasRef" width="600" height="600"
-            style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+    style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
     @if (vehiculos.Any())
     {
@@ -73,14 +73,25 @@
 </select>
 
 <button class="btn btn-primary" @onclick="BuscarNodo">Buscar Nodo</button>
+
 <button @onclick="DibujarMapaEnCanvasDesdeBlazor">Dibujar Mapa</button>
 <p>@resultado</p>
+<div class="d-flex flex-row align-items-start gap-4">
+    <canvas id="canvas2" @ref="rutaCanvasRef" width="500" height="60"
+    style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+</div>
 
 <p>@estadoH</p>
 <p>@estadoV</p>
 
+
 @code {
+
+
+
     private ElementReference mapaCanvasRef;
+
+    private ElementReference rutaCanvasRef;
     public string valorInicio = "";
     public string valorFinal = "";
     private List<Vehiculo> vehiculos = new();
@@ -142,6 +153,7 @@
         nodo1.viaAbajo = false;
 
         nodo1.ConteoActualVehiculos = 10;
+        nodo1.Id = 1;
 
         //NODO 2
         nodo2.ReferenciaDerecha = nodo3;
@@ -152,8 +164,8 @@
         nodo2.viaIzquierda = false;
         nodo2.viaArriba = false;
         nodo2.viaAbajo = true;
-
         nodo2.Informacion = "2";
+        nodo2.Id = 2;
 
         //NODO 3
         nodo3.ReferenciaAbajo = nodo6;
@@ -164,6 +176,7 @@
         nodo3.viaIzquierda = false;
         nodo3.viaArriba = false;
         nodo3.viaAbajo = true;
+        nodo3.Id = 3;
 
         //Nodo 4
         nodo4.ReferenciaDerecha = nodo5;
@@ -175,6 +188,7 @@
         nodo4.viaIzquierda = false;
         nodo4.viaArriba = true;
         nodo4.viaAbajo = false;
+        nodo4.Id = 4;
 
         //Nodo 5
         nodo5.ReferenciaDerecha = nodo6;
@@ -184,10 +198,11 @@
         nodo5.Informacion = "5";
         nodo5.TieneSemaforo = true;
 
-		nodo5.viaDerecha = true;
+        nodo5.viaDerecha = true;
         nodo5.viaIzquierda = true;
         nodo5.viaArriba = true;
         nodo5.viaAbajo = true;
+        nodo5.Id = 5;
 
         //Nodo 6
         nodo6.ReferenciaAbajo = nodo9;
@@ -199,6 +214,7 @@
         nodo6.viaIzquierda = true;
         nodo6.viaArriba = false;
         nodo6.viaAbajo = true;
+        nodo6.Id = 6;
 
         //Nodo 7
         nodo7.ReferenciaArriba = nodo4;
@@ -209,6 +225,7 @@
         nodo7.viaIzquierda = false;
         nodo7.viaArriba = true;
         nodo7.viaAbajo = false;
+        nodo7.Id = 7;
 
         //Nodo 8
         nodo8.ReferenciaIzquierda = nodo7;
@@ -220,6 +237,7 @@
         nodo8.viaIzquierda = true;
         nodo8.viaArriba = true;
         nodo8.viaAbajo = false;
+        nodo8.Id = 8;
 
         //Nodo 9
         nodo9.ReferenciaIzquierda = nodo8;
@@ -230,6 +248,8 @@
         nodo9.viaIzquierda = true;
         nodo9.viaArriba = false;
         nodo9.viaAbajo = false;
+        nodo9.Id = 9;
+
 
         nodo1.PosX = 100; nodo1.PosY = 100;
         nodo2.PosX = 300; nodo2.PosY = 100;
@@ -403,16 +423,32 @@
         {
             if (hasta != null)
             {
-                    await DibujarCalleEnCanvas(desde, hasta, EsCentral);
+                await DibujarCalleEnCanvas(desde, hasta, EsCentral);
             }
         }
     }
-    
-    public void BuscarNodo() {
+
+    public void BuscarNodo()
+    {
+        Nodo[] camino;
         Nodo inicial = ObtenerNodoPorValor(valorInicio);
         Nodo final = ObtenerNodoPorValor(valorFinal);
-        int pasos = Nodo.Buscar(inicial, final);
-        resultado = pasos >= 0 ? $"Ruta encontrada en {pasos} pasos" : "Ruta no encontrada";
+        int pasos = Nodo.Buscar(inicial, final, out camino);
+        string nodosVisitados = "";
+
+        if (pasos != -1)
+        {
+            for (int i = 0; i < pasos; i++)
+            {
+                nodosVisitados += camino[i].Informacion + ";";
+            }
+
+            DibujarRutaAyB(nodosVisitados);
+        }
+        else
+        {
+            Console.WriteLine("No se encontró camino.");
+        }
     }
 
     public Nodo ObtenerNodoPorValor(string valor)
@@ -483,7 +519,7 @@
             };
 
             var posibles = direcciones.Where(n => n != null).ToList();
-        
+
             if (posibles.Count == 0)
                 continue;
 
@@ -497,7 +533,7 @@
                     siguienteNodo = destino;
                     break;
                 }
-            
+
                 var dx = destino.PosX - vehiculo.NodoActual.PosX;
                 var dy = destino.PosY - vehiculo.NodoActual.PosY;
                 bool dirVertical = dy != 0;
@@ -521,6 +557,18 @@
                 });
 
             }
+        }
+
+        // Reiniciar conteo
+        foreach (var nodo in ObtenerTodosLosNodos())
+        {
+            nodo.ConteoActualVehiculos = 0;
+        }
+
+        // Contar de nuevo
+        foreach (var vehiculo in vehiculos)
+        {
+            vehiculo.NodoActual.ConteoActualVehiculos++;
         }
     }
 
@@ -560,5 +608,11 @@
         }
 
         return nodos;
+    }
+
+
+
+    public async void DibujarRutaAyB(string ruta) {
+        await module.InvokeVoidAsync("dibujarRutaDeNodos", ruta, rutaCanvasRef);
     }
 }

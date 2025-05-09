@@ -278,14 +278,14 @@ else if (datosCargados && totalItems == 0)
         }
     </script>
 }
-<canvas @ref="mapaCanvasRef" width="600" height="600"
+<canvas @ref="mapaCanvasRef2" width="600" height="600"
 style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 <button @onclick="DibujarMapaEnCanvasDesdeBlazor">Dibujar Mapa</button>
 <p>@resultado</p>
 
 @code {
 
-    private ElementReference mapaCanvasRef;
+    private ElementReference mapaCanvasRef2;
     public string valorInicio = "";
     public string valorFinal = "";
     private bool simulando = false;
@@ -372,7 +372,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
                 return;
             }
 
-            await module.InvokeVoidAsync("limpiarCanvas", mapaCanvasRef);
+            await module.InvokeVoidAsync("limpiarCanvas", mapaCanvasRef2);
             Console.WriteLine("Canvas limpiado");
 
 
@@ -403,7 +403,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
 
         Nodo[] nodos = { nodo };
         var nodoInfo = JsonSerializer.Serialize(nodos, options);
-        await module.InvokeVoidAsync("dibujarNodoIndividual", mapaCanvasRef, nodoInfo);
+        await module.InvokeVoidAsync("dibujarNodoIndividual", mapaCanvasRef2, nodoInfo);
     }
 
     private async Task DibujarCalleEnCanvas(Nodo desde, Nodo hasta, bool EsInterseccion)
@@ -432,7 +432,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         if (hasta != null)
         {
 
-            await module.InvokeVoidAsync("dibujarCalleIndividual", mapaCanvasRef, calle);
+            await module.InvokeVoidAsync("dibujarCalleIndividual", mapaCanvasRef2, calle);
         }
     }
     private async Task DibujarConexiones()
