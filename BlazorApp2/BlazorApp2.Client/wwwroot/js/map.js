@@ -49,17 +49,21 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
 
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
+        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
+
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.strokeStyle = congestion > 70 ? '#e74c3c' :
-            congestion > 40 ? '#f39c12' :
-                '#2ecc71';
-        ctx.lineWidth = 29;
+        ctx.strokeStyle = calle.ColorSemaforo || '#2ecc71'; // usa color enviado desde Blazor
+        ctx.lineWidth = 24;
         ctx.lineCap = 'square';
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
+        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
+
         ctx.stroke();
+
+
     }else {
         ctx.strokeStyle = '#444'; // gris oscuro
         ctx.lineWidth = 25; // grosor de la carretera
@@ -67,18 +71,19 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
 
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
+        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
+
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.strokeStyle = congestion > 70 ? '#e74c3c' :
-            congestion > 40 ? '#f39c12' :
-                '#2ecc71';
+        ctx.strokeStyle = calle.ColorSemaforo || '#2ecc71'; // usa color enviado desde Blazor
         ctx.lineWidth = 24;
         ctx.lineCap = 'square';
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
-        ctx.stroke();
+        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
 
+        ctx.stroke();
 
     }
 
@@ -132,16 +137,18 @@ export function dibujarNodoIndividual(canvas, nodoRecibido) {
     ctx.fill();
 
     // Dibujar semáforo si existe
-    if (nodo.TieneSemaforo) {
-        ctx.fillStyle = '#f1c40f';
-        ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
-    }
+    //if (nodo.TieneSemaforo) {
+     //   ctx.fillStyle = '#f1c40f';
+       // ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
+    //}
 
     // Texto del nodo
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 12px Arial';
+    ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 5);
+    ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 7);
+
+
 
     console.log("Nodo dibujado:", nodo.Informacion);
 }

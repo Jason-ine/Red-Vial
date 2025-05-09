@@ -79,24 +79,16 @@
 <p>@estadoH</p>
 <p>@estadoV</p>
 
-
-
-
-
-
-
 @code {
     private ElementReference mapaCanvasRef;
     public string valorInicio = "";
     public string valorFinal = "";
-
     private List<Vehiculo> vehiculos = new();
     private bool simulacionActiva = false;
     private System.Timers.Timer? temporizador;
     private Random aleatorio = new();
-
+    private bool paginaCargada = false;
     private IJSObjectReference? module;
-
     public Nodo nodo1 = new Nodo();
     public Nodo nodo2 = new Nodo(); 
     public Nodo nodo3 = new Nodo();
@@ -116,8 +108,6 @@
         _ = Semaforo.IniciarSemaforo();
     }
 
-
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -125,15 +115,15 @@
             try
             {
                 module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/map.js");
-                Console.WriteLine("Módulo JavaScript cargado correctamente");
+                paginaCargada = true;
+                Console.WriteLine("JS cargado correctamente");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al cargar módulo JS: {ex.Message}");
+                Console.WriteLine($"Error al cargar modulo JS: {ex.Message}");
             }
         }
     }
-
 
     protected override void OnInitialized()
     {
@@ -143,7 +133,7 @@
 
         //NODO 1
         nodo1.ReferenciaDerecha = nodo2;
-        nodo1.Informacion = "-1-";
+        nodo1.Informacion = "1";
         nodo1.TieneSemaforo = false;
 
         nodo1.viaDerecha = true;
@@ -163,11 +153,11 @@
         nodo2.viaArriba = false;
         nodo2.viaAbajo = true;
 
-        nodo2.Informacion = "-2-";
+        nodo2.Informacion = "2";
 
         //NODO 3
         nodo3.ReferenciaAbajo = nodo6;
-        nodo3.Informacion = "-3-";
+        nodo3.Informacion = "3";
         nodo3.TieneSemaforo = false;
 
         nodo3.viaDerecha = false;
@@ -178,7 +168,7 @@
         //Nodo 4
         nodo4.ReferenciaDerecha = nodo5;
         nodo4.ReferenciaArriba = nodo1;
-        nodo4.Informacion = "-4-";
+        nodo4.Informacion = "4";
         nodo4.TieneSemaforo = true;
 
         nodo4.viaDerecha = true;
@@ -191,7 +181,7 @@
         nodo5.ReferenciaIzquierda = nodo4;
         nodo5.ReferenciaAbajo = nodo8;
         nodo5.ReferenciaArriba = nodo2;
-        nodo5.Informacion = "-5-";
+        nodo5.Informacion = "5";
         nodo5.TieneSemaforo = true;
 
 		nodo5.viaDerecha = true;
@@ -202,7 +192,7 @@
         //Nodo 6
         nodo6.ReferenciaAbajo = nodo9;
         nodo6.ReferenciaIzquierda = nodo5;
-        nodo6.Informacion = "-6-";
+        nodo6.Informacion = "6";
         nodo6.TieneSemaforo = true;
 
         nodo6.viaDerecha = false;
@@ -212,7 +202,7 @@
 
         //Nodo 7
         nodo7.ReferenciaArriba = nodo4;
-        nodo7.Informacion = "-7-";
+        nodo7.Informacion = "7";
         nodo7.TieneSemaforo = false;
 
         nodo7.viaDerecha = false;
@@ -224,7 +214,7 @@
         nodo8.ReferenciaIzquierda = nodo7;
         nodo8.ReferenciaArriba = nodo5;
         nodo8.TieneSemaforo = true;
-        nodo8.Informacion = "-8-";
+        nodo8.Informacion = "8";
 
         nodo8.viaDerecha = false;
         nodo8.viaIzquierda = true;
@@ -233,7 +223,7 @@
 
         //Nodo 9
         nodo9.ReferenciaIzquierda = nodo8;
-        nodo9.Informacion = "-9-";
+        nodo9.Informacion = "9";
         nodo9.TieneSemaforo = false;
 
         nodo9.viaDerecha = false;
@@ -254,11 +244,18 @@
         nodo9.PosX = 500; nodo9.PosY = 500;
     }
 
-    private void Actualizar()
+    private async void Actualizar()
     {
         estadoV = Semaforo.EstadoVertical;
         estadoH = Semaforo.EstadoHorizontal;
-        InvokeAsync(StateHasChanged);
+
+        if (!paginaCargada || module == null)
+            return;
+
+        await DibujarMapaEnCanvasDesdeBlazor();
+        await InvokeAsync(StateHasChanged);
+
+        Console.WriteLine($"Redibujando mapa - Vertical: {estadoV}, Horizontal: {estadoH}");
     }
 
     public void Dispose()
@@ -266,17 +263,14 @@
         Semaforo.OnEstadoChanged -= Actualizar;
     }
 
-
-
     private async Task DibujarMapaEnCanvasDesdeBlazor()
     {
         try
-        {
-            Console.WriteLine("Iniciando dibujo del mapa...");
+        {            
 
             if (module == null)
             {
-                Console.WriteLine("Módulo JS no cargado, intentando cargar...");
+                Console.WriteLine("JS no cargado, intentando cargar...");
                 module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/map.js");
             }
 
@@ -285,13 +279,12 @@
 
             if (!canvasExists)
             {
-                Console.WriteLine("Error: Elemento canvas no encontrado en el DOM");
+                Console.WriteLine("Error: no hay canvas en el DOM");
                 return;
             }
 
             await module.InvokeVoidAsync("limpiarCanvas", mapaCanvasRef);
             Console.WriteLine("Canvas limpiado");
-
 
             var nodos = new[] { nodo1, nodo2, nodo3, nodo4, nodo5, nodo6, nodo7, nodo8, nodo9 };
 
@@ -300,10 +293,7 @@
             foreach (var nodo in nodos)
             {
                 await DibujarNodoEnCanvas(nodo);
-            }
-
-
-            
+            }            
 
             Console.WriteLine("Mapa dibujado completamente");
         }
@@ -312,14 +302,13 @@
             Console.WriteLine($"Error al dibujar mapa: {ex.Message}");
         }
     }
+
     private async Task DibujarNodoEnCanvas(Nodo nodo)
     {
-
         var options = new JsonSerializerOptions
             {
                 ReferenceHandler = ReferenceHandler.Preserve
             };
-
 
         Nodo[] nodos = { nodo };
         var nodoInfo = JsonSerializer.Serialize(nodos, options);
@@ -333,6 +322,30 @@
                 ReferenceHandler = ReferenceHandler.Preserve
             };
 
+        // Paso 1: calcular direccion
+        var dx = hasta.PosX - desde.PosX;
+        var dy = hasta.PosY - desde.PosY;
+
+        bool esVertical = dy != 0;
+        bool esHorizontal = dx != 0;
+
+        // Paso 2: definir color
+        string colorSemaforo;
+
+        if (esVertical)
+        {
+            colorSemaforo = Semaforo.EstadoVertical ? "#2ecc71" : "#e74c3c"; // verde o rojo
+        }
+        else if (esHorizontal)
+        {
+            colorSemaforo = Semaforo.EstadoHorizontal ? "#2ecc71" : "#e74c3c"; // verde o rojo
+        }
+        else
+        {
+            colorSemaforo = "#999999";
+        }
+
+        // Paso 3: enviar datos JS
         var calleInfo = new
         {
             DesdeX = desde.PosX,
@@ -342,59 +355,59 @@
             ConteoActualVehiculos = desde.ConteoActualVehiculos,
             Informacion2 = hasta.Informacion.ToString(),
             Informacion1 = desde.Informacion.ToString(),
-            EsInterseccion = EsInterseccion
-    };
-        
-        object[] nodos = { calleInfo }
-        ;
-        var calle = JsonSerializer.Serialize(nodos, options);
+            EsInterseccion = EsInterseccion,
+            ColorSemaforo = colorSemaforo
+        };
+
+        var calle = JsonSerializer.Serialize(new[] { calleInfo }, options);
 
         if (hasta != null)
         {
-
             await module.InvokeVoidAsync("dibujarCalleIndividual", mapaCanvasRef, calle);
         }
+
+        Console.WriteLine($"Calle {desde.Informacion} → {hasta.Informacion}, Color: {colorSemaforo}");
     }
+
     private async Task DibujarConexiones()
     {
-    var conexiones = new List<(Nodo, Nodo, bool)>
-    {
-        (nodo1, nodo1.ReferenciaDerecha, false),
-        (nodo2, nodo2.ReferenciaDerecha, false),
-        (nodo2, nodo2.ReferenciaAbajo, false),
-        (nodo3, nodo3.ReferenciaAbajo, false),
-        (nodo4, nodo4.ReferenciaDerecha, false),
-        (nodo4, nodo4.ReferenciaArriba, false),
-
-        (nodo5, nodo5.ReferenciaDerecha, true),
-        (nodo5, nodo5.ReferenciaIzquierda, true),
-        (nodo5, nodo5.ReferenciaArriba, true),
-        (nodo5, nodo5.ReferenciaArriba, true),
-
-        (nodo5, nodo5.ReferenciaDerecha, false),
-        (nodo5, nodo5.ReferenciaIzquierda, false),
-        (nodo5, nodo5.ReferenciaArriba, false),
-        (nodo5, nodo5.ReferenciaArriba, false),
-
-        (nodo5, nodo5.ReferenciaAbajo,false),
-        (nodo6, nodo6.ReferenciaIzquierda,false),
-        (nodo6, nodo6.ReferenciaAbajo,false),
-        (nodo7, nodo7.ReferenciaArriba,false),
-        (nodo8, nodo8.ReferenciaIzquierda,false),
-        (nodo8, nodo8.ReferenciaArriba,false),
-        (nodo9, nodo9.ReferenciaIzquierda,false)
-    };
-
-    foreach (var (desde, hasta, EsCentral) in conexiones)
-    {
-        if (hasta != null)
+        var conexiones = new List<(Nodo, Nodo, bool)>
         {
-                await DibujarCalleEnCanvas(desde, hasta, EsCentral);
+            (nodo1, nodo1.ReferenciaDerecha, false),
+            (nodo2, nodo2.ReferenciaDerecha, false),
+            (nodo2, nodo2.ReferenciaAbajo, false),
+            (nodo3, nodo3.ReferenciaAbajo, false),
+            (nodo4, nodo4.ReferenciaDerecha, false),
+            (nodo4, nodo4.ReferenciaArriba, false),
+
+            (nodo5, nodo5.ReferenciaDerecha, true),
+            (nodo5, nodo5.ReferenciaIzquierda, true),
+            (nodo5, nodo5.ReferenciaArriba, true),
+            (nodo5, nodo5.ReferenciaArriba, true),
+
+            (nodo5, nodo5.ReferenciaDerecha, false),
+            (nodo5, nodo5.ReferenciaIzquierda, false),
+            (nodo5, nodo5.ReferenciaArriba, false),
+            (nodo5, nodo5.ReferenciaArriba, false),
+
+            (nodo5, nodo5.ReferenciaAbajo,false),
+            (nodo6, nodo6.ReferenciaIzquierda,false),
+            (nodo6, nodo6.ReferenciaAbajo,false),
+            (nodo7, nodo7.ReferenciaArriba,false),
+            (nodo8, nodo8.ReferenciaIzquierda,false),
+            (nodo8, nodo8.ReferenciaArriba,false),
+            (nodo9, nodo9.ReferenciaIzquierda,false)
+        };
+
+        foreach (var (desde, hasta, EsCentral) in conexiones)
+        {
+            if (hasta != null)
+            {
+                    await DibujarCalleEnCanvas(desde, hasta, EsCentral);
+            }
         }
     }
-}
     
-
     public void BuscarNodo() {
         Nodo inicial = ObtenerNodoPorValor(valorInicio);
         Nodo final = ObtenerNodoPorValor(valorFinal);
@@ -417,14 +430,7 @@
             "9" => nodo9,
             _ => null
         };
-    }
-
-    
-
-    public void CircularVehiculos(){
-       
-    }
-
+    }    
 
     private void IniciarSimulacion()
     {
@@ -432,7 +438,7 @@
             return;
 
         simulacionActiva = true;
-        InicializarVehiculos(10); // Puedes ajustar el número de vehículos
+        InicializarVehiculos(10); //Numero de vehiculos 
 
         temporizador = new System.Timers.Timer(1000); // Intervalo de 1 segundo
         temporizador.Elapsed += (sender, args) =>
@@ -468,41 +474,56 @@
     {
         foreach (var vehiculo in vehiculos)
         {
-            var nodo = vehiculo.NodoActual;
             var direcciones = new List<Nodo?>
             {
-                nodo.ReferenciaArriba,
-                nodo.ReferenciaAbajo,
-                nodo.ReferenciaIzquierda,
-                nodo.ReferenciaDerecha
-            }.Where(n => n != null).ToList();
+                vehiculo.NodoActual.ReferenciaArriba,
+                vehiculo.NodoActual.ReferenciaAbajo,
+                vehiculo.NodoActual.ReferenciaIzquierda,
+                vehiculo.NodoActual.ReferenciaDerecha
+            };
 
-            if (direcciones.Count == 0)
+            var posibles = direcciones.Where(n => n != null).ToList();
+        
+            if (posibles.Count == 0)
                 continue;
 
-            var siguienteNodo = direcciones[aleatorio.Next(direcciones.Count)];
+            Nodo? siguienteNodo = null;
+
+            //Buscar direccion
+            foreach (var destino in posibles.OrderBy(_ => aleatorio.Next()))
+            {
+                if (!destino.TieneSemaforo)
+                {
+                    siguienteNodo = destino;
+                    break;
+                }
+            
+                var dx = destino.PosX - vehiculo.NodoActual.PosX;
+                var dy = destino.PosY - vehiculo.NodoActual.PosY;
+                bool dirVertical = dy != 0;
+                bool dirHorizontal = dx != 0;
+                if ((dirVertical && Semaforo.EstadoVertical) || (dirHorizontal && Semaforo.EstadoHorizontal))
+                {
+                    siguienteNodo = destino;
+                    break;
+                }
+            }
 
             if (siguienteNodo != null)
             {
-                // Simular semáforo: si tiene semáforo y está en rojo, el vehículo espera
-                if (siguienteNodo.TieneSemaforo && aleatorio.Next(2) == 0) // 50% de probabilidad de estar en rojo
-                {
-                    continue;
-                }
-
                 vehiculo.NodoAnterior = vehiculo.NodoActual.Informacion?.ToString() ?? "";
                 vehiculo.NodoActual = siguienteNodo;
                 vehiculo.SeMovio = true;
                 _ = Task.Run(async () =>
                 {
-                await Task.Delay(900); // un poco antes del próximo tick
+                    await Task.Delay(900);
                     vehiculo.SeMovio = false;
                 });
+
             }
         }
     }
 
-  
     private List<Nodo> ObtenerTodosLosNodos()
     {
         var nodos = new List<Nodo>();
@@ -540,11 +561,4 @@
 
         return nodos;
     }
-
-    /*private class Vehiculo
-    {
-        public int Id { get; set; }
-        public Nodo NodoActual { get; set; } = null!;
-    }*/
-
 }
