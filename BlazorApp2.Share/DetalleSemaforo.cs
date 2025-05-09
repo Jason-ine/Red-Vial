@@ -19,9 +19,10 @@ namespace BlazorApp2.Share
         public double TiempoPromedioPorCarro { get; set; } = 0;
         public int totalCambios { get; set; } = 0;
 
-        private int sumaTiempoRojo;
-        private int sumaTiempoVerde;
-        private int sumaVehiculosPasaron;
+        private int sumaTiempoRojo = 0;
+        private int sumaTiempoVerde=0;
+        private int sumaVehiculosPasaron =0;
+        private int cantidadVehiculosEsperando1 = 0;
 
         public DetalleSemaforo() { }
 
@@ -31,25 +32,62 @@ namespace BlazorApp2.Share
             DireccionSemaforo = direccion;
         }
 
-        public void RegistrarCambioEstado(int cantidadVehiculosEsperando, int tiempoRojo, int vehiculosPasaron, int tiempoVerde)
+        public void RegistrarCambioEstado(int cantidadVehiculosEsperando, int tiempoRojo, int vehiculosPasaron, int tiempoVerde, bool huboCambio)
         {
-            if (cantidadVehiculosEsperando <= 0 || tiempoRojo <= 0 || vehiculosPasaron <= 0 || tiempoVerde <= 0)
-                return;
+            if (huboCambio == false)
+            {
+                double tiempoEsperaPromedio = tiempoRojo / 2.0;
+                double tiempoCrucePromedio = (double)tiempoVerde / vehiculosPasaron;
+                double tiempoPromedioPorCarroCambio = tiempoEsperaPromedio + tiempoCrucePromedio;
+                if (cantidadVehiculosEsperando % 2 != 0)
+                {
+                    cantidadVehiculosEsperando += 1;
+                     cantidadVehiculosEsperando1 = cantidadVehiculosEsperando / 2;
+                }
+                else
+                {
+                    cantidadVehiculosEsperando1 = cantidadVehiculosEsperando / 2;
+                }
 
-            double tiempoEsperaPromedio = tiempoRojo / 2.0;
-            double tiempoCrucePromedio = (double)tiempoVerde / vehiculosPasaron;
-            double tiempoPromedioPorCarroCambio = tiempoEsperaPromedio + tiempoCrucePromedio;
+                SumaCantidadEspera += cantidadVehiculosEsperando1;
+                sumaTiempoRojo += tiempoRojo;
+                sumaTiempoVerde += tiempoVerde;
+                sumaVehiculosPasaron += vehiculosPasaron;
 
-            SumaCantidadEspera += cantidadVehiculosEsperando;
-            sumaTiempoRojo += tiempoRojo;
-            sumaTiempoVerde += tiempoVerde;
-            sumaVehiculosPasaron += vehiculosPasaron;
-            totalCambios++;
+            }
+            else if(huboCambio == true)
+            {
+                double tiempoEsperaPromedio = tiempoRojo / 2.0;
+                double tiempoCrucePromedio = (double)tiempoVerde / vehiculosPasaron;
+                double tiempoPromedioPorCarroCambio = tiempoEsperaPromedio + tiempoCrucePromedio;
+                cantidadVehiculosEsperando1 = cantidadVehiculosEsperando / 2;
+                if (cantidadVehiculosEsperando % 2 != 0)
+                {
+                    cantidadVehiculosEsperando += 1;
+                    cantidadVehiculosEsperando1 = cantidadVehiculosEsperando / 2;
+                }
+                else
+                {
+                    cantidadVehiculosEsperando1 = cantidadVehiculosEsperando / 2;
+                }
+                SumaCantidadEspera += cantidadVehiculosEsperando1;
+                sumaTiempoRojo += tiempoRojo;
+                sumaTiempoVerde += tiempoVerde;
+                sumaVehiculosPasaron += vehiculosPasaron;
+                totalCambios++;
+            }
+
         }
 
         public void FinalizarRegistro()
         {
-            if (totalCambios == 0) return;
+            if (totalCambios == 0 || sumaVehiculosPasaron == 0)
+            {
+                PromedioVehiculosPorCambio = 0;
+                TiempoCrucePromedio = 0;
+                TiempoPromedioPorCarro = 0;
+                return;
+            }
 
             PromedioVehiculosPorCambio = (double)sumaVehiculosPasaron / totalCambios;
             double tiempoEsperaPromedio = (sumaTiempoRojo / (double)totalCambios) / 2.0;

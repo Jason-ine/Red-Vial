@@ -11,7 +11,7 @@ namespace BlazorApp2.Share
     {
         [Key] 
         public int NodoId { get; set; }
-        public string DireccionSemaforo { get; set; }
+        public string DireccionSemaforo { get; set; } = string.Empty;
         public int TotalCambios { get; set; }
         public int SumaCantidadEspera { get; set; }
         public double IndicadorCongestion { get; set; }

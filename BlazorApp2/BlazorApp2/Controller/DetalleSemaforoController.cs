@@ -168,29 +168,57 @@ namespace BlazorApp2.Controller
         }
 
         [HttpGet("AnalisisCuelloBotella")]
-        public async Task<ActionResult<CuelloBotellaContainer>> GetAnalisisCuelloBotella()
+        public async Task<ActionResult<CuelloBotellaContainer>> GetAnalisisCuelloBotella([FromQuery] int pagina = 1)
         {
-            var result = new CuelloBotellaContainer();
+            var connection = _context.Database.GetDbConnection();
+            var cuelloBotellaList = new List<CuelloBotella>();
 
-            var data = await _context.CuellosBotella
-                .FromSqlRaw("EXEC AnalisisCuelloBotella")
-                .ToListAsync();
+            try
+            {
+                await connection.OpenAsync();
+                using var command = connection.CreateCommand();
+                command.CommandText = "AnalisisCuelloBotella"; 
+                command.CommandType = System.Data.CommandType.StoredProcedure;
 
-            if (data.Count > 0) result.Item1 = data[0];
-            if (data.Count > 1) result.Item2 = data[1];
-            if (data.Count > 2) result.Item3 = data[2];
-            if (data.Count > 3) result.Item4 = data[3];
-            if (data.Count > 4) result.Item5 = data[4];
-            if (data.Count > 5) result.Item6 = data[5];
-            if (data.Count > 6) result.Item7 = data[6];
-            if (data.Count > 7) result.Item8 = data[7];
-            if (data.Count > 8) result.Item9 = data[8];
-            if (data.Count > 9) result.Item10 = data[9];
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    cuelloBotellaList.Add(new CuelloBotella
+                    {
+                        NodoId = reader.GetInt32(0),
+                        DireccionSemaforo = reader.GetString(1),
+                        TotalCambios = reader.GetInt32(2),
+                        SumaCantidadEspera = reader.GetInt32(3),
+                        IndicadorCongestion = reader.GetDouble(4)
+                    });
+                }
+            }
+            finally
+            {
+                await connection.CloseAsync();
+            }
 
-            result.TotalItems = data.Count;
+            var totalItems = cuelloBotellaList.Count;
+            var paginados = cuelloBotellaList.Skip((pagina - 1) * 10).Take(10).ToList();
 
-            return Ok(result);
+            var contenedor = new CuelloBotellaContainer
+            {
+                TotalItems = totalItems,
+                Item1 = paginados.ElementAtOrDefault(0),
+                Item2 = paginados.ElementAtOrDefault(1),
+                Item3 = paginados.ElementAtOrDefault(2),
+                Item4 = paginados.ElementAtOrDefault(3),
+                Item5 = paginados.ElementAtOrDefault(4),
+                Item6 = paginados.ElementAtOrDefault(5),
+                Item7 = paginados.ElementAtOrDefault(6),
+                Item8 = paginados.ElementAtOrDefault(7),
+                Item9 = paginados.ElementAtOrDefault(8),
+                Item10 = paginados.ElementAtOrDefault(9)
+            };
+
+            return Ok(contenedor);
         }
+
         [HttpPost("EjecutarEstadisticas")]
         public async Task<IActionResult> EjecutarEstadisticas()
         {

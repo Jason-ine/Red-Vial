@@ -3,7 +3,11 @@
 @using System.Diagnostics
 @using System.Text.Json
 @using System.Text.Json.Serialization
+@inject HttpClient Http
+@inject PdfGenerator PdfGenerator
+@inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
+
 
 <PageTitle>Red Vial</PageTitle>
 
@@ -12,6 +16,9 @@
 <div class="mb-3">
     <button class="btn btn-success me-2" @onclick="IniciarSimulacion">Iniciar Simulacion</button>
     <button class="btn btn-danger" @onclick="DetenerSimulacion">Detener Simulacion</button>
+    <button @onclick="BorrarTodosRegistros" class="btn btn-danger">
+        Borrar Todos
+    </button>
 </div>
 
 <div class="d-flex flex-row align-items-start gap-4">
@@ -76,10 +83,267 @@
 <p>@estadoH</p>
 <p>@estadoV</p>
 
+<h1>Análisis viales</h1>
+
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger">
+        @mensajeError
+    </div>
+}
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtros Básicos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="nodoId" class="form-label">Nodo ID:</label>
+                        <select @bind="nodoIdFiltro" class="form-select" id="nodoId">
+                            <option value="">Todos</option>
+                            <option value="2">2</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="8">8</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="direccion" class="form-label">Dirección:</label>
+                        <select @bind="direccionFiltro" class="form-select" id="direccion">
+                            <option value="">Todos</option>
+                            <option value="Vertical">Vertical</option>
+                            <option value="Horizontal">Horizontal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mt-3 d-flex justify-content-end">
+                        <button @onclick="AplicarFiltros" class="btn btn-primary">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="visually-hidden">Cargando...</span>
+                            }
+                            Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Análisis Especializados</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <label for="tipoAnalisis" class="form-label">Tipo de Análisis:</label>
+                        <select @bind="tipoAnalisis" class="form-select" id="tipoAnalisis">
+                            <option value="0">Datos Detallados</option>
+                            <option value="1">Intersecciones con Mayor Congestión</option>
+                            <option value="2">Cuellos de Botella</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button @onclick="AplicarFiltros" class="btn btn-primary">
+                            @if (isLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span class="visually-hidden">Cargando...</span>
+                            }
+                            Aplicar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isLoading && datosCargados == false)
+{
+    <div class="text-center mt-4">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+    </div>
+}
+
+@if (datosCargados)
+{
+    <div class="mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>@tituloResultados</h3>
+            <div>
+                <button @onclick="DescargarPdf" class="btn btn-sm btn-outline-success">
+                    Exportar esta vista
+                </button>
+            </div>
+        </div>
+
+        @if (totalItems > 0)
+        {
+            @if (mostrarPaginacion)
+            {
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div>
+                        Mostrando @((paginaActual - 1) * 10 + 1)-@Math.Min(paginaActual * 10, totalItems)
+                        de @totalItems registros
+                    </div>
+                    <div>
+                        <button @onclick="() => CambiarPagina(1)"
+                        class="btn btn-outline-primary btn-sm"
+                        disabled="@(paginaActual == 1)">
+                            &lt;&lt;
+                        </button>
+                        <button @onclick="() => CambiarPagina(paginaActual - 1)"
+                        class="btn btn-outline-primary btn-sm mx-1"
+                        disabled="@(paginaActual == 1)">
+                            &lt;
+                        </button>
+                        <span class="mx-2">Página @paginaActual de @totalPaginas</span>
+                        <button @onclick="() => CambiarPagina(paginaActual + 1)"
+                        class="btn btn-outline-primary btn-sm mx-1"
+                        disabled="@(paginaActual == totalPaginas)">
+                            &gt;
+                        </button>
+                        <button @onclick="() => CambiarPagina(totalPaginas)"
+                        class="btn btn-outline-primary btn-sm"
+                        disabled="@(paginaActual == totalPaginas)">
+                            &gt;&gt;
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            @if (tipoAnalisis == "0")
+                            {
+                                <th>Nodo ID</th>
+                                <th>Dirección</th>
+                                <th>Total Cambios</th>
+                                <th>Promedio por cruce </th>
+                                <th>Vehículos Esperados</th>
+                                <th>Promedio Vehículos/Cambio</th>
+                                <th>Tiempo Promedio (s)</th>
+                            }
+                            else if (tipoAnalisis == "1")
+                            {
+                                <th>Nodo ID</th>
+                                <th>Total Vehículos</th>
+                                <th>Total Cambios</th>
+                                <th>Indicador Congestión</th>
+                            }
+                            else
+                            {
+                                <th>Nodo ID</th>
+                                <th>Dirección</th>
+                                <th>Total Cambios</th>
+                                <th>Vehículos Esperados</th>
+                                <th>Indicador Congestión</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int i = 0; i < 10; i++)
+                        {
+                            var item = GetItem(i);
+                            @if (item != null)
+                            {
+                                <tr>
+                                    @if (tipoAnalisis == "0")
+                                    {
+                                        var detalle = item as DetalleSemaforo;
+                                        <td>@detalle?.NodoId</td>
+                                        <td>@detalle?.DireccionSemaforo</td>
+                                        <td>@detalle?.totalCambios</td>
+                                        <td>@detalle?.TiempoCrucePromedio.ToString("F2")</td>
+                                        <td>@detalle?.SumaCantidadEspera</td>
+                                        <td>@detalle?.PromedioVehiculosPorCambio.ToString("F2")</td>
+                                        <td>@detalle?.TiempoPromedioPorCarro.ToString("F2")</td>
+                                    }
+                                    else if (tipoAnalisis == "1")
+                                    {
+                                        var interseccion = item as InterseccionCongestionada;
+                                        <td>@interseccion?.NodoId</td>
+                                        <td>@interseccion?.TotalVehiculos</td>
+                                        <td>@interseccion?.TotalCambios</td>
+                                        <td>@interseccion?.IndicadorCongestion.ToString("F2")</td>
+                                    }
+                                    else if(tipoAnalisis=="2")
+                                    {
+                                        var cuello = item as CuelloBotella;
+                                        <td>@cuello?.NodoId</td>
+                                        <td>@cuello?.DireccionSemaforo</td>
+                                        <td>@cuello?.TotalCambios</td>
+                                        <td>@cuello?.SumaCantidadEspera</td>
+                                        <td>@cuello?.IndicadorCongestion.ToString("F2")</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info mt-4">
+                <i class="bi bi-info-circle-fill me-2"></i> No existen datos para mostrar con los filtros aplicados.
+            </div>
+        }
+    </div>
+}
+else if (datosCargados && totalItems == 0)
+{
+    <div class="alert alert-warning mt-4">
+        No hay datos disponibles para los criterios seleccionados.
+    </div>
+}
+
+@if (isClientSide)
+{
+    <script suppress-error="BL9992">
+        function downloadFile(base64Data, fileName, mimeType) {
+        try {
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], {type: mimeType});
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+
+        setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        }, 100);
+        } catch (error) {
+        console.error("Error en downloadFile:", error);
+        }
+        }
+    </script>
+}
+
+
+
 
 @code {
-
-
 
     private ElementReference mapaCanvasRef;
 
@@ -105,10 +369,37 @@
     string resultado = "";
     bool estadoV;
     bool estadoH;
+    bool estadoVAnterior;
+    bool estadoHAnterior;
+    private DetalleSemaforoContainer contenedorDetalle = new();
+    private InterseccionCongestionadaContainer contenedorIntersecciones = new();
+    private CuelloBotellaContainer contenedorCuellos = new();
+
+    private bool isLoading = false;
+    private bool datosCargados = false;
+    private bool mostrarPaginacion = true;
+    private int? nodoIdFiltro;
+    private string direccionFiltro = "";
+    private string tipoAnalisis = "0";
+    private string mensajeError = "";
+    private string tituloResultados = "Datos de Semáforos";
+    private bool isClientSide = false;
+    private int paginaActual = 1;
+    private int totalPaginas = 1;
+    private int totalItems = 0;
+    private int ConteoActualVehiculos=0;
+    private int TotalVehiculosPasados = 0;
+    int tiempoRojo = 10;  
+    int tiempoVerde = 10;
+    int conteoAnterior = 0;
+    int vehiculosEsperando1 = 0;
+
+
 
     protected override async Task OnInitializedAsync()
     {
         _ = Semaforo.IniciarSemaforo();
+
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -399,7 +690,8 @@
         {
             if (simulacionActiva)
             {
-                MoverVehiculos(); // mueve y actualiza conteo
+                MoverVehiculos();
+                SimularCambios();
                 await InvokeAsync(async () =>
                 {
                     await DibujarMapaEnCanvasDesdeBlazor(); // redibuja ya con conteos correctos
@@ -410,11 +702,34 @@
         temporizador.Start();
     }
 
-    private void DetenerSimulacion()
+    private async Task DetenerSimulacion()
     {
         simulacionActiva = false;
         temporizador?.Stop();
         temporizador?.Dispose();
+        using var http = new HttpClient();
+        http.BaseAddress = new Uri("https://localhost:7108");
+
+        try
+        {
+            var response = await http.PostAsync("/api/DetalleSemaforo/EjecutarEstadisticas", null);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine("Estadísticas actualizadas.");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Error al actualizar estadísticas: {errorContent}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Excepción: {ex.Message}");
+        }
+
+        await AplicarFiltros();
     }
 
     private void InicializarVehiculos(int cantidad)
@@ -541,4 +856,234 @@
         }
         return nodos;
     }
+    private async Task AplicarFiltros()
+    {
+        isLoading = true;
+        mensajeError = "";
+        paginaActual = 1;
+
+        try
+        {
+            if (tipoAnalisis == "0")
+            {
+                var url = $"https://localhost:7108/api/DetalleSemaforo/ObtenerFiltradoCombinado?pagina={paginaActual}";
+
+                if (nodoIdFiltro.HasValue)
+                    url += $"&nodoId={nodoIdFiltro}";
+
+                if (!string.IsNullOrEmpty(direccionFiltro))
+                    url += $"&direccion={Uri.EscapeDataString(direccionFiltro)}";
+
+                contenedorDetalle = await Http.GetFromJsonAsync<DetalleSemaforoContainer>(url);
+                tituloResultados = "Datos Filtrados de Semáforos";
+                totalItems = contenedorDetalle?.TotalItems ?? 0;
+                mostrarPaginacion = true;
+            }
+            else if (tipoAnalisis == "1")
+            {
+                contenedorIntersecciones = await Http.GetFromJsonAsync<InterseccionCongestionadaContainer>(
+                    "https://localhost:7108/api/DetalleSemaforo/InterseccionesMasCongestionadas");
+                tituloResultados = "Intersecciones con Mayor Congestión";
+                totalItems = contenedorIntersecciones?.TotalItems ?? 0;
+                mostrarPaginacion = false;
+            }
+            else if(tipoAnalisis =="2")
+            {
+                contenedorCuellos = await Http.GetFromJsonAsync<CuelloBotellaContainer>(
+                    "https://localhost:7108/api/DetalleSemaforo/AnalisisCuelloBotella");
+                tituloResultados = "Análisis de Cuellos de Botella";
+                totalItems = contenedorCuellos?.TotalItems ?? 0;
+                mostrarPaginacion = true;
+            }
+
+            totalPaginas = (int)Math.Ceiling(totalItems / 10.0);
+            datosCargados = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al cargar datos: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CambiarPagina(int nuevaPagina)
+    {
+        if (nuevaPagina < 1 || nuevaPagina > totalPaginas)
+            return;
+
+        paginaActual = nuevaPagina;
+        await InvokeAsync(async () =>
+        {
+            await AplicarFiltros();
+            StateHasChanged();
+        });
+    }
+    private async Task SimularCambios()
+    {
+        mensajeError = "";
+
+        try
+        {
+            var nodosConSemaforo = new Dictionary<int, Nodo>
+        {
+            { 2, nodo2 }, { 4, nodo4 }, { 5, nodo5 }, { 6, nodo6 }, { 8, nodo8 }
+        };
+
+            foreach (var (nodoId, nodo) in nodosConSemaforo)
+            {
+                if (nodo?.TieneSemaforo == false)
+                {
+                    mensajeError += $"Nodo {nodoId} no tiene semáforo configurado. ";
+                    continue;
+                }
+
+                foreach (var direccion in new[] { "Vertical", "Horizontal" })
+                {
+                    bool esVertical = direccion == "Vertical";
+                    var detalle = new DetalleSemaforo(nodoId, direccion);
+
+                    vehiculosEsperando1 = esVertical ?
+                    nodo?.ConteoActualVehiculos?? 0 :
+                    nodo?.ConteoActualVehiculos?? 0;
+
+                    bool huboCambio = estadoV != estadoVAnterior;
+
+                    if (nodo?.semaforo != null)
+                    {
+                        tiempoRojo = esVertical
+                            ? nodo.semaforo.TiempoVerdeHorizontal / 1000
+                            : nodo.semaforo.TiempoVerdeVertical / 1000;
+
+                        tiempoVerde = esVertical
+                            ? nodo.semaforo.TiempoVerdeVertical / 1000
+                            : nodo.semaforo.TiempoVerdeHorizontal / 1000;
+                    }
+
+
+
+                    if (vehiculosEsperando1 == 0)
+                    {
+                        vehiculosEsperando1 = 0;
+                    }
+                    else if(vehiculosEsperando1!=0)
+                    {
+                        vehiculosEsperando1 = vehiculosEsperando1 - conteoAnterior;
+                    }
+                    int vehiculosPasaron = vehiculosEsperando1;
+                    detalle.RegistrarCambioEstado(
+                        cantidadVehiculosEsperando: vehiculosEsperando1,
+                        tiempoRojo: tiempoRojo,
+                        vehiculosPasaron: vehiculosPasaron,
+                        tiempoVerde: tiempoVerde,
+                        huboCambio: huboCambio
+                    );
+
+                    detalle.FinalizarRegistro();
+
+                    var response = await Http.PostAsJsonAsync(
+                        "https://localhost:7108/api/DetalleSemaforo/GuardarSemaforo",
+                        detalle
+                    );
+
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        mensajeError += $"Error guardando nodo {nodoId} ({direccion}). ";
+                    }
+                }
+            }
+
+
+            mensajeError = string.IsNullOrEmpty(mensajeError)
+                ? "Datos registrados correctamente."
+                : $"Completado con errores: {mensajeError}";
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error durante el registro: {ex.Message}";
+        }
+        estadoVAnterior = estadoV;
+        conteoAnterior = vehiculosEsperando1;
+    }
+    private async Task BorrarTodosRegistros()
+    {
+        try
+        {
+            var response = await Http.DeleteAsync("https://localhost:7108/api/DetalleSemaforo/BorrarTodos");
+
+            if (response.IsSuccessStatusCode)
+            {
+                mensajeError = "Todos los registros han sido borrados";
+                datosCargados = false;
+                contenedorDetalle = new();
+                contenedorIntersecciones = new();
+                contenedorCuellos = new();
+            }
+            else
+            {
+                mensajeError = "Error al borrar registros";
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DescargarPdf()
+    {
+        try
+        {
+            byte[] pdfBytes = null;
+
+            if (tipoAnalisis == "0")
+            {
+                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorDetalle, "0");
+            }
+            else if (tipoAnalisis == "1")
+            {
+                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorIntersecciones, "1");
+            }
+            else if (tipoAnalisis=="2")
+            {
+                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorCuellos, "2");
+            }
+
+            if (pdfBytes == null || pdfBytes.Length == 0)
+            {
+                mensajeError = "Error: El PDF generado está vacío";
+                return;
+            }
+
+            await JSRuntime.InvokeVoidAsync(
+                "downloadFile",
+                Convert.ToBase64String(pdfBytes),
+                $"Reporte_{tituloResultados.Replace(" ", "_")}_{DateTime.Now:yyyyMMddHHmmss}.pdf",
+                "application/pdf"
+            );
+        }
+        catch (Exception ex)
+        {
+            mensajeError = $"Error al generar PDF: {ex.Message}";
+        }
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) isClientSide = true;
+    }
+    private object? GetItem(int index)
+    {
+        return tipoAnalisis switch
+        {
+            "0" => contenedorDetalle.GetItem(index),
+            "1" => contenedorIntersecciones.GetItem(index),
+            "2" => contenedorCuellos.GetItem(index),
+            _ => null
+        };
+    }
+  
 }
