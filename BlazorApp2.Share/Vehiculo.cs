@@ -12,7 +12,7 @@ namespace BlazorApp2.Share
         public Nodo NodoActual { get; set; } = null!;
         public string NodoAnterior { get; set; } = "";
         public bool SeMovio{ get; set; } = false;
-
+        public string? DireccionPendiente { get; set; }
 
     }
 }
