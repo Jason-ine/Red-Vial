@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,56 +11,39 @@ namespace BlazorApp2.Share
 {
     public class Semaforo
     {
-        public bool EstadoVertical { get; private set; } = true;
-        public bool EstadoHorizontal { get; private set; } = false;
+        public int Id { get; set; }
+        public static bool EstadoVertical { get; set; } = true;
+        public static bool EstadoHorizontal { get; set; } = false;
+        public static event Action? OnEstadoChanged;
+        public int TiempoVerdeVertical { get; set; }
+        public int TiempoVerdeHorizontal { get; set; }
+        public int TiempoCambio { get; set; } = 10; 
 
-        public int TiempoVerdeVertical { get; set; } = 5;
-        public int TiempoVerdeHorizontal { get; set; } = 5;
+        public Semaforo() { }
 
-        private int contador = 0;
-        private static Random random = new Random();
-
-        public void AvanzarTiempo()
+        public Semaforo(int id, int tiempoVerdeVertical, int tiempoVerdeHorizontal)
         {
-            contador++;
+            Id = id;
+            TiempoVerdeVertical = tiempoVerdeVertical;
+            TiempoVerdeHorizontal = tiempoVerdeHorizontal;
+        }
 
-            if (EstadoVertical && contador >= TiempoVerdeVertical)
+        public static async Task IniciarSemaforo()
+        {
+            while (true)
             {
-                CambiarEstado();
-            }
-            else if (EstadoHorizontal && contador >= TiempoVerdeHorizontal)
-            {
+                await Task.Delay(10000); 
                 CambiarEstado();
             }
         }
-        public void CambiarEstado()
+
+        public static void CambiarEstado()
         {
             EstadoVertical = !EstadoVertical;
             EstadoHorizontal = !EstadoHorizontal;
-            contador = 0;
-        }
-
-        public string ObtenerEstadoTexto()
-        {
-            if (EstadoVertical)
-                return "Verde (Vertical) / Rojo (Horizontal)";
-            else
-                return "Rojo (Vertical) / Verde (Horizontal)";
-        }
-
-        public void ActualizarDetalle(DetalleSemaforo detalle)
-        {
-            if (detalle == null)
-                return;
-
-            int vehiculosEsperando = random.Next(5, 21);
-            int vehiculosPasaron = random.Next(1, vehiculosEsperando + 1);
-
-            int tiempoRojo = EstadoVertical ? TiempoVerdeHorizontal : TiempoVerdeVertical;
-            int tiempoVerde = EstadoVertical ? TiempoVerdeVertical : TiempoVerdeHorizontal;
-
-            detalle.RegistrarCambioEstado(vehiculosEsperando, tiempoRojo, vehiculosPasaron, tiempoVerde);
-            detalle.FinalizarRegistro();
+            OnEstadoChanged?.Invoke();
         }
     }
 }
+
+     
