@@ -1,0 +1,126 @@
+﻿@page "/counter"
+@using BlazorApp2.Share;
+@using System.Diagnostics
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+<select @bind="valorInicio" class="form-select" aria-label="Seleccione el Nodo Inicial" required>
+    <option value="" disabled selected hidden>Nodo Inicial...</option>
+    <option value="1">Interseccion 1</option>
+    <option value="2">Interseccion 2</option>
+    <option value="3">Interseccion 3</option>
+    <option value="4">Interseccion 4</option>
+    <option value="5">Interseccion 5</option>
+    <option value="6">Interseccion 6</option>
+    <option value="7">Interseccion 7</option>
+    <option value="8">Interseccion 8</option>
+    <option value="9">Interseccion 9</option>
+</select>
+
+<select @bind="valorFinal" class="form-select" aria-label="Seleccione el Nodo Final" required>
+    <option value="" disabled selected hidden>Nodo Final...</option>
+    <option value="1">Interseccion 1</option>
+    <option value="2">Interseccion 2</option>
+    <option value="3">Interseccion 3</option>
+    <option value="4">Interseccion 4</option>
+    <option value="5">Interseccion 5</option>
+    <option value="6">Interseccion 6</option>
+    <option value="7">Interseccion 7</option>
+    <option value="8">Interseccion 8</option>
+    <option value="9">Interseccion 9</option>
+</select>
+
+<button class="btn btn-primary" @onclick="BuscarNodo">Buscar Nodo</button>
+<p>@resultado</p>
+
+@code {
+    public string valorInicio = "";
+    public string valorFinal = "";
+    public Nodo nodo1 = new Nodo();
+    public Nodo nodo2 = new Nodo(); 
+    public Nodo nodo3 = new Nodo();
+    public Nodo nodo4 = new Nodo();
+    public Nodo nodo5 = new Nodo();
+    public Nodo nodo6 = new Nodo();
+    public Nodo nodo7 = new Nodo();
+    public Nodo nodo8 = new Nodo();
+    public Nodo nodo9 = new Nodo();
+    string resultado = "";
+
+
+    protected override void OnInitialized()
+    {
+        nodo1.ReferenciaDerecha = nodo2;
+        nodo1.Informacion = "Nodo 1";
+        nodo1.ConteoActualVehiculos = 10;
+
+        nodo2.ReferenciaDerecha = nodo3;
+        nodo2.ReferenciaAbajo = nodo5;
+        nodo2.TieneSemaforo = true;
+        nodo2.Informacion = "Nodo 2";
+
+        nodo3.ReferenciaAbajo = nodo6;
+        nodo3.Informacion = "Nodo 3";
+
+
+        nodo4.ReferenciaDerecha = nodo5;
+        nodo4.ReferenciaArriba = nodo1;
+        nodo4.TieneSemaforo = true;
+        nodo4.Informacion = "Nodo 4";
+
+
+        nodo5.ReferenciaDerecha = nodo6;
+        nodo5.ReferenciaIzquierda = nodo4;
+        nodo5.ReferenciaAbajo = nodo8;
+        nodo5.ReferenciaArriba = nodo2;
+        nodo5.TieneSemaforo = true;
+        nodo5.Informacion = "Nodo 5";
+
+        nodo6.ReferenciaAbajo = nodo9;
+        nodo6.ReferenciaIzquierda = nodo5;
+        nodo6.TieneSemaforo = true;
+        nodo6.Informacion = "Nodo 6";
+
+        nodo7.ReferenciaArriba = nodo4;
+        nodo7.Informacion = "Nodo 7";
+
+        nodo8.ReferenciaIzquierda = nodo7;
+        nodo8.ReferenciaArriba = nodo5;
+        nodo8.TieneSemaforo = true;
+        nodo8.Informacion = "Nodo 8";
+
+        nodo9.ReferenciaIzquierda = nodo8;
+        nodo9.Informacion = "Nodo 9";
+    }
+    public void BuscarNodo() {
+        Nodo inicial = ObtenerNodoPorValor(valorInicio);
+        Nodo final = ObtenerNodoPorValor(valorFinal);
+        int pasos = Nodo.Buscar(inicial, final);
+        resultado = pasos >= 0 ? $"Ruta encontrada en {pasos} pasos" : "Ruta no encontrada";
+    }
+
+    public Nodo ObtenerNodoPorValor(string valor)
+    {
+        return valor switch
+        {
+            "1" => nodo1,
+            "2" => nodo2,
+            "3" => nodo3,
+            "4" => nodo4,
+            "5" => nodo5,
+            "6" => nodo6,
+            "7" => nodo7,
+            "8" => nodo8,
+            "9" => nodo9,
+            _ => null
+        };
+    }
+
+    
+
+    public void CircularVehiculos(){
+       
+    }
+
+}
