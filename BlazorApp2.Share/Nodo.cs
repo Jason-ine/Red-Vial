@@ -11,6 +11,7 @@ namespace BlazorApp2.Share
 
     public class Nodo
     {
+        public int Id { get; set;}
         private int _conteoVehiculos;
         public Nodo ReferenciaIzquierda { get; set; }
         public Nodo ReferenciaDerecha { get; set; }
@@ -61,8 +62,9 @@ namespace BlazorApp2.Share
         }
 
 
-        public Nodo(Nodo referenciaIzquierda, Nodo referenciaDerecha, Nodo referenciaArriba, Nodo referenciaAbajo, object informacion, bool tieneSemaforo, int conteoHistoricoVehiculos, int conteoActualVehiculos)
+        public Nodo(int id, Nodo referenciaIzquierda, Nodo referenciaDerecha, Nodo referenciaArriba, Nodo referenciaAbajo, object informacion, bool tieneSemaforo, int conteoHistoricoVehiculos, int conteoActualVehiculos)
         {
+            Id = id;
             ReferenciaIzquierda = referenciaIzquierda;
             ReferenciaDerecha = referenciaDerecha;
             ReferenciaArriba = referenciaArriba;
@@ -90,8 +92,9 @@ namespace BlazorApp2.Share
             LimpiarVisitados(actual.ReferenciaAbajo);
         }
 
-        public static int Buscar(Nodo inicio, Nodo destino)
+        public static int Buscar(Nodo inicio, Nodo destino, out Nodo[] caminoFinal)
         {
+            caminoFinal = new Nodo[100]; // arreglo para guardar el camino final
             if (inicio == null || destino == null)
                 return -1;
 
@@ -99,12 +102,14 @@ namespace BlazorApp2.Share
 
             Nodo[] cola = new Nodo[100];
             int[] pasos = new int[100];
+            Nodo[] padres = new Nodo[100]; // para saber quién llevó a quién
 
             int frente = 0;
             int fin = 0;
 
             cola[fin] = inicio;
             pasos[fin] = 0;
+            padres[fin] = null;
             inicio.Visitado = true;
             fin++;
 
@@ -112,27 +117,62 @@ namespace BlazorApp2.Share
             {
                 Nodo actual = cola[frente];
                 int pasoActual = pasos[frente];
-                frente++;
 
                 if (actual == destino)
-                    return pasoActual;
+                {
+                    // reconstruir el camino solo con nodos del más corto
+                    Nodo[] caminoTemp = new Nodo[100];
+                    int contador = 0;
 
-                EncolarSiValido(cola, pasos, ref fin, actual.ReferenciaDerecha, pasoActual + 1);
-                EncolarSiValido(cola, pasos, ref fin, actual.ReferenciaIzquierda, pasoActual + 1);
-                EncolarSiValido(cola, pasos, ref fin, actual.ReferenciaArriba, pasoActual + 1);
-                EncolarSiValido(cola, pasos, ref fin, actual.ReferenciaAbajo, pasoActual + 1);
+                    Nodo nodo = actual;
+                    int pos = frente;
+
+                    while (nodo != null)
+                    {
+                        caminoTemp[contador] = nodo;
+                        nodo = padres[pos];
+                        pos = BuscarPosicion(cola, nodo, fin);
+                        contador++;
+                    }
+
+                    // invertir caminoTemp en caminoFinal para que quede de inicio a destino
+                    for (int i = 0; i < contador; i++)
+                    {
+                        caminoFinal[i] = caminoTemp[contador - i - 1];
+                    }
+
+                    return contador; // cantidad de nodos en la ruta
+                }
+
+                EncolarSiValido(cola, pasos, padres, ref fin, actual.ReferenciaDerecha, pasoActual + 1, actual);
+                EncolarSiValido(cola, pasos, padres, ref fin, actual.ReferenciaIzquierda, pasoActual + 1, actual);
+                EncolarSiValido(cola, pasos, padres, ref fin, actual.ReferenciaArriba, pasoActual + 1, actual);
+                EncolarSiValido(cola, pasos, padres, ref fin, actual.ReferenciaAbajo, pasoActual + 1, actual);
+
+                frente++;
             }
 
+            return -1; // no se encontró camino
+        }
+
+        private static int BuscarPosicion(Nodo[] arreglo, Nodo nodo, int hasta)
+        {
+            for (int i = 0; i < hasta; i++)
+            {
+                if (arreglo[i] == nodo)
+                    return i;
+            }
             return -1;
         }
 
-        private static void EncolarSiValido(Nodo[] cola, int[] pasos, ref int fin, Nodo nodo, int paso)
+        private static void EncolarSiValido(Nodo[] cola, int[] pasos, Nodo[] padres, ref int fin, Nodo nodo, int paso, Nodo padre)
         {
             if (nodo != null && !nodo.Visitado)
             {
                 nodo.Visitado = true;
                 cola[fin] = nodo;
                 pasos[fin] = paso;
+                padres[fin] = padre;
                 fin++;
             }
         }

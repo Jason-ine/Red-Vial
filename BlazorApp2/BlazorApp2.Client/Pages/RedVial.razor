@@ -61,7 +61,7 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     public string valorFinal = "";
 
     private IJSObjectReference? module;
-    
+
     public Nodo nodo1 = new Nodo();
     public Nodo nodo2 = new Nodo(); 
     public Nodo nodo3 = new Nodo();
@@ -74,10 +74,11 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     string resultado = "";
     bool estadoV;
     bool estadoH;
-    
+
     protected override async Task OnInitializedAsync()
     {
         _ = Semaforo.IniciarSemaforo();
+       _= DibujarMapaEnCanvasDesdeBlazor();
     }
 
 
@@ -108,19 +109,23 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo1.ReferenciaDerecha = nodo2;
         nodo1.Informacion = "Nodo 1";
         nodo1.ConteoActualVehiculos = 10;
+        nodo1.Id = 1;
 
         nodo2.ReferenciaDerecha = nodo3;
         nodo2.ReferenciaAbajo = nodo5;
         nodo2.TieneSemaforo = true;
         nodo2.Informacion = "Nodo 2";
+        nodo2.Id = 2;
 
         nodo3.ReferenciaAbajo = nodo6;
         nodo3.Informacion = "Nodo 3";
+        nodo3.Id = 3;
 
         nodo4.ReferenciaDerecha = nodo5;
         nodo4.ReferenciaArriba = nodo1;
         nodo4.TieneSemaforo = true;
         nodo4.Informacion = "Nodo 4";
+        nodo4.Id = 4;
 
         nodo5.ReferenciaDerecha = nodo6;
         nodo5.ReferenciaIzquierda = nodo4;
@@ -128,22 +133,27 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo5.ReferenciaArriba = nodo2;
         nodo5.TieneSemaforo = true;
         nodo5.Informacion = "Nodo 5";
+        nodo5.Id = 5;
 
         nodo6.ReferenciaAbajo = nodo9;
         nodo6.ReferenciaIzquierda = nodo5;
         nodo6.TieneSemaforo = true;
         nodo6.Informacion = "Nodo 6";
+        nodo6.Id = 6;
 
         nodo7.ReferenciaArriba = nodo4;
         nodo7.Informacion = "Nodo 7";
+        nodo7.Id = 7;
 
         nodo8.ReferenciaIzquierda = nodo7;
         nodo8.ReferenciaArriba = nodo5;
         nodo8.TieneSemaforo = true;
         nodo8.Informacion = "Nodo 8";
+        nodo8.Id = 8;
 
         nodo9.ReferenciaIzquierda = nodo8;
         nodo9.Informacion = "Nodo 9";
+        nodo9.Id = 9;
 
         nodo1.PosX = 100; nodo1.PosY = 100;
         nodo2.PosX = 300; nodo2.PosY = 100;
@@ -156,6 +166,8 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         nodo7.PosX = 100; nodo7.PosY = 500;
         nodo8.PosX = 300; nodo8.PosY = 500;
         nodo9.PosX = 500; nodo9.PosY = 500;
+
+        
     }
 
     private void Actualizar()
@@ -169,6 +181,8 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
     {
         Semaforo.OnEstadoChanged -= Actualizar;
     }
+
+
 
 
 
@@ -246,8 +260,8 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
             Informacion2 = hasta.Informacion.ToString(),
             Informacion1 = desde.Informacion.ToString(),
             EsInterseccion = EsInterseccion
-    };
-        
+        };
+
         object[] nodos = { calleInfo }
         ;
         var calle = JsonSerializer.Serialize(nodos, options);
@@ -259,8 +273,8 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         }
     }
     private async Task DibujarConexiones()
-{
-    var conexiones = new List<(Nodo, Nodo, bool)>
+    {
+        var conexiones = new List<(Nodo, Nodo, bool)>
     {
         (nodo1, nodo1.ReferenciaDerecha, false),
         (nodo2, nodo2.ReferenciaDerecha, false),
@@ -288,21 +302,40 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
         (nodo9, nodo9.ReferenciaIzquierda,false)
     };
 
-    foreach (var (desde, hasta, EsCentral) in conexiones)
-    {
-        if (hasta != null)
+        foreach (var (desde, hasta, EsCentral) in conexiones)
         {
+            if (hasta != null)
+            {
                 await DibujarCalleEnCanvas(desde, hasta, EsCentral);
+            }
         }
     }
-}
-    
+
 
     public void BuscarNodo() {
+        /*  Nodo inicial = ObtenerNodoPorValor(valorInicio);
+          Nodo final = ObtenerNodoPorValor(valorFinal);
+          int pasos = Nodo.Buscar(inicial, final);
+          resultado = pasos >= 0 ? $"Ruta encontrada en {pasos} pasos" : "Ruta no encontrada";*/
+        Nodo[] camino;
         Nodo inicial = ObtenerNodoPorValor(valorInicio);
         Nodo final = ObtenerNodoPorValor(valorFinal);
-        int pasos = Nodo.Buscar(inicial, final);
-        resultado = pasos >= 0 ? $"Ruta encontrada en {pasos} pasos" : "Ruta no encontrada";
+        int pasos = Nodo.Buscar(inicial, final, out camino);
+        string nodosVisitados="";
+
+        if (pasos != -1)
+        {
+            for (int i = 0; i < pasos; i++)
+            {
+                nodosVisitados += " >= " + camino[i].Informacion;
+            }
+
+            resultado = nodosVisitados;
+        }
+        else
+        {
+            Console.WriteLine("No se encontró camino.");
+        }
     }
 
     public Nodo ObtenerNodoPorValor(string valor)

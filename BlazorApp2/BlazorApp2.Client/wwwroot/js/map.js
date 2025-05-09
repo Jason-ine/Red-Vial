@@ -1,4 +1,61 @@
-﻿export function limpiarCanvas(canvas) {
+﻿function dibujarFlecha(ctx, fromX, fromY, toX, toY, isDoubleWay) {
+    const headLength = 10;
+    const arrowColor = 'white';
+    ctx.fillStyle = arrowColor;
+    ctx.strokeStyle = arrowColor;
+
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+
+    if (isDoubleWay) {
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+
+        ctx.beginPath();
+        ctx.moveTo(midX, midY);
+        ctx.lineTo(
+            midX + headLength * Math.cos(angle - Math.PI / 6),
+            midY + headLength * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.lineTo(
+            midX + headLength * Math.cos(angle + Math.PI / 6),
+            midY + headLength * Math.sin(angle + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(midX, midY);
+        const oppositeAngle = angle + Math.PI; // Calcula el ángulo opuesto
+        ctx.lineTo(
+            (midX)  + headLength * Math.cos(oppositeAngle - Math.PI / 6),
+            midY + headLength * Math.sin(oppositeAngle - Math.PI / 6)
+        );
+        ctx.lineTo(
+            midX + headLength * Math.cos(oppositeAngle + Math.PI / 6),
+            midY + headLength * Math.sin(oppositeAngle + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+    } else {
+        // Dibuja una flecha al final para las calles de una vía
+        const midX = (fromX + toX) / 2;
+        const midY = (fromY + toY) / 2;
+        ctx.beginPath();
+        ctx.moveTo(midX, midY);
+        ctx.lineTo(
+            midX - headLength * Math.cos(angle - Math.PI / 6),
+            midY - headLength * Math.sin(angle - Math.PI / 6)
+        );
+        ctx.lineTo(
+            midX - headLength * Math.cos(angle + Math.PI / 6),
+            midY - headLength * Math.sin(angle + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+    }
+}
+
+export function limpiarCanvas(canvas) {
     if (!canvas) {
         console.error("Elemento canvas no existe");
         return;
@@ -19,16 +76,22 @@ export function dibujarNodoIndividual(canvas, nodoRecibido) {
     nodo = nodo[0];
     console.log("Intentando dibujar nodo:", nodo);
     console.log(nodo.PosX + " y " + nodo.PosY)
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    
+
     ctx.fillStyle = '#3498db';
 
     ctx.beginPath();
-    ctx.arc(nodo.PosX, nodo.PosY, 20, 0, Math.PI * 2);
+    ctx.arc(nodo.PosX - 30, nodo.PosY - 35, 20, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.fillStyle = "black";
+    ctx.font = "10px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(nodo.Informacion, nodo.PosX - 30, nodo.PosY - 35)
     // Dibujar semáforo si existe
     if (nodo.TieneSemaforo) {
         ctx.fillStyle = '#f1c40f';
@@ -69,9 +132,11 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
     let congestion = (calle.ConteoActualVehiculos / 20) * 100;
     ctx.beginPath();
 
-    if (calle.Informacion1 == "Nodo 5" || calle.Informacion2 == "Nodo 5") {
-        ctx.strokeStyle = '#444'; // gris oscuro
-        ctx.lineWidth = 30; // grosor de la carretera
+    const esDobleVia = (calle.Informacion1 == "Nodo 5" || calle.Informacion2 == "Nodo 5");
+
+    if (esDobleVia) {
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 30;
         ctx.lineCap = 'square';
 
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
@@ -87,9 +152,13 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
         ctx.stroke();
-    }else {
-        ctx.strokeStyle = '#444'; // gris oscuro
-        ctx.lineWidth = 25; // grosor de la carretera
+
+        // Dibuja flechas para doble vía en el centro
+        dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY, true);
+
+    } else {
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 20;
         ctx.lineCap = 'square';
 
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
@@ -100,44 +169,25 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
         ctx.strokeStyle = congestion > 70 ? '#e74c3c' :
             congestion > 40 ? '#f39c12' :
                 '#2ecc71';
-        ctx.lineWidth = 24;
+        ctx.lineWidth = 19;
         ctx.lineCap = 'square';
         ctx.moveTo(calle.DesdeX, calle.DesdeY);
         ctx.lineTo(calle.HastaX, calle.HastaY);
         ctx.stroke();
 
-
+        // Dibuja flechas para una vía al final
+        dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY, false);
     }
 
-    // 3. Dibujar la línea discontinua blanca encima
+    // Línea discontinua
     ctx.beginPath();
-    ctx.setLineDash([20, 20]); // patrón discontínuo
+    ctx.setLineDash([10, 10]);
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 3;
     ctx.moveTo(calle.DesdeX, calle.DesdeY);
     ctx.lineTo(calle.HastaX, calle.HastaY);
     ctx.stroke();
-    ctx.setLineDash([]); 
-  //  dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY);
-}
+    ctx.setLineDash([]);
 
-function dibujarFlecha(ctx, fromX, fromY, toX, toY) {
-    const headLength = 15; // Longitud de la punta de la flecha
-    const angle = Math.atan2(toY - fromY, toX - fromX);
 
-    ctx.fillStyle = ctx.strokeStyle; // Mismo color que la línea
-
-    // Dibujar punta de flecha
-    ctx.beginPath();
-    ctx.moveTo(toX, toY);
-    ctx.lineTo(
-        toX - headLength * Math.cos(angle - Math.PI / 6),
-        toY - headLength * Math.sin(angle - Math.PI / 6)
-    );
-    ctx.lineTo(
-        toX - headLength * Math.cos(angle + Math.PI / 6),
-        toY - headLength * Math.sin(angle + Math.PI / 6)
-    );
-    ctx.closePath();
-    ctx.fill();
 }
