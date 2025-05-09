@@ -14,141 +14,94 @@
     console.log("Canvas limpiado");
 }
 
-
-
-
 export function dibujarCalleIndividual(canvas, calleRecibida) {
     let calle = JSON.parse(calleRecibida);
     calle = calle[0];
 
-    if (!canvas) {
-        console.error("Error: Elemento canvas no proporcionado");
-        return;
-    }
+    if (!canvas || !calle) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-        console.error("Error: No se pudo obtener contexto 2D");
-        return;
-    }
+    if (!ctx) return;
 
-    if (!calle) {
-        console.error("Error: Datos de calle no proporcionados");
-        return;
-    }
+    let congestion = (calle.conteoActualVehiculos / 20) * 100;
 
-    console.log("Dibujando calle:", calle);
-
-    let congestion = (calle.ConteoActualVehiculos / 20) * 100;
     ctx.beginPath();
 
-    if (calle.Informacion1 == "Nodo 5" || calle.Informacion2 == "Nodo 5") {
-        ctx.strokeStyle = '#444'; // gris oscuro
-        ctx.lineWidth = 30; // grosor de la carretera
+    if (calle.informacion1 === "5" || calle.informacion2 === "5") {
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 30;
         ctx.lineCap = 'square';
 
-        ctx.moveTo(calle.DesdeX, calle.DesdeY);
-        ctx.lineTo(calle.HastaX, calle.HastaY);
-        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
-
+        ctx.moveTo(calle.desdeX, calle.desdeY);
+        ctx.lineTo(calle.hastaX, calle.hastaY);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.strokeStyle = calle.ColorSemaforo || '#2ecc71'; // usa color enviado desde Blazor
+        ctx.strokeStyle = calle.colorSemaforo || '#2ecc71';
         ctx.lineWidth = 24;
         ctx.lineCap = 'square';
-        ctx.moveTo(calle.DesdeX, calle.DesdeY);
-        ctx.lineTo(calle.HastaX, calle.HastaY);
-        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
-
+        ctx.moveTo(calle.desdeX, calle.desdeY);
+        ctx.lineTo(calle.hastaX, calle.hastaY);
         ctx.stroke();
-
-
-    }else {
-        ctx.strokeStyle = '#444'; // gris oscuro
-        ctx.lineWidth = 25; // grosor de la carretera
+    } else {
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 25;
         ctx.lineCap = 'square';
 
-        ctx.moveTo(calle.DesdeX, calle.DesdeY);
-        ctx.lineTo(calle.HastaX, calle.HastaY);
-        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
-
+        ctx.moveTo(calle.desdeX, calle.desdeY);
+        ctx.lineTo(calle.hastaX, calle.hastaY);
         ctx.stroke();
 
         ctx.beginPath();
-        ctx.strokeStyle = calle.ColorSemaforo || '#2ecc71'; // usa color enviado desde Blazor
+        ctx.strokeStyle = calle.colorSemaforo || '#2ecc71';
         ctx.lineWidth = 24;
         ctx.lineCap = 'square';
-        ctx.moveTo(calle.DesdeX, calle.DesdeY);
-        ctx.lineTo(calle.HastaX, calle.HastaY);
-        console.log("Semáforo:", calle.Informacion1, "→", calle.Informacion2, "| Color:", calle.ColorSemaforo);
-
+        ctx.moveTo(calle.desdeX, calle.desdeY);
+        ctx.lineTo(calle.hastaX, calle.hastaY);
         ctx.stroke();
-
     }
 
-    // 3. Dibujar la línea discontinua blanca encima
+    // Línea discontinua blanca
     ctx.beginPath();
-    ctx.setLineDash([20, 20]); // patrón discontínuo
+    ctx.setLineDash([20, 20]);
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 3;
-    ctx.moveTo(calle.DesdeX, calle.DesdeY);
-    ctx.lineTo(calle.HastaX, calle.HastaY);
+    ctx.moveTo(calle.desdeX, calle.desdeY);
+    ctx.lineTo(calle.hastaX, calle.hastaY);
     ctx.stroke();
-    ctx.setLineDash([]); 
-    //  dibujarFlecha(ctx, calle.DesdeX, calle.DesdeY, calle.HastaX, calle.HastaY);
-
-}
-
-function dibujarFlecha(ctx, fromX, fromY, toX, toY) {
-    const headLength = 15; // Longitud de la punta de la flecha
-    const angle = Math.atan2(toY - fromY, toX - fromX);
-
-    ctx.fillStyle = ctx.strokeStyle; // Mismo color que la línea
-
-    // Dibujar punta de flecha
-    ctx.beginPath();
-    ctx.moveTo(toX, toY);
-    ctx.lineTo(
-        toX - headLength * Math.cos(angle - Math.PI / 6),
-        toY - headLength * Math.sin(angle - Math.PI / 6)
-    );
-    ctx.lineTo(
-        toX - headLength * Math.cos(angle + Math.PI / 6),
-        toY - headLength * Math.sin(angle + Math.PI / 6)
-    );
-    ctx.closePath();
-    ctx.fill();
+    ctx.setLineDash([]);
 }
 
 export function dibujarNodoIndividual(canvas, nodoRecibido) {
     let nodo = JSON.parse(nodoRecibido);
     nodo = nodo[0];
-    console.log("Intentando dibujar nodo:", nodo);
-    console.log(nodo.PosX + " y " + nodo.PosY)
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-
+    // Nodo base (círculo azul)
     ctx.fillStyle = '#3498db';
-
     ctx.beginPath();
-    ctx.arc(nodo.PosX, nodo.PosY, 20, 0, Math.PI * 2);
+    ctx.arc(nodo.posX, nodo.posY, 20, 0, Math.PI * 2);
     ctx.fill();
 
-    // Dibujar semáforo si existe
-    //if (nodo.TieneSemaforo) {
-     //   ctx.fillStyle = '#f1c40f';
-       // ctx.fillRect(nodo.PosX - 8, nodo.PosY - 8, 16, 16);
-    //}
-
-    // Texto del nodo
+    // Número del nodo
     ctx.fillStyle = 'white';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(nodo.Informacion, nodo.PosX, nodo.PosY + 7);
+    ctx.fillText(nodo.informacion, nodo.posX, nodo.posY + 7);
 
+    // Contador de vehículos esperando (arriba del nodo)
+    if (nodo.conteoActualVehiculos && nodo.conteoActualVehiculos > 0) {
+        // Fondo blanco circular
+        ctx.beginPath();
+        ctx.arc(nodo.posX, nodo.posY - 30, 14, 0, Math.PI * 2);
+        ctx.fillStyle = 'white';
+        ctx.fill();
 
-
-    console.log("Nodo dibujado:", nodo.Informacion);
+        // Texto del contador
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`🚗 ${nodo.conteoActualVehiculos}`, nodo.posX, nodo.posY - 26);
+    }
 }

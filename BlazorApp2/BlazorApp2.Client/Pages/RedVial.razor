@@ -248,14 +248,6 @@
     {
         estadoV = Semaforo.EstadoVertical;
         estadoH = Semaforo.EstadoHorizontal;
-
-        if (!paginaCargada || module == null)
-            return;
-
-        await DibujarMapaEnCanvasDesdeBlazor();
-        await InvokeAsync(StateHasChanged);
-
-        Console.WriteLine($"Redibujando mapa - Vertical: {estadoV}, Horizontal: {estadoH}");
     }
 
     public void Dispose()
@@ -306,12 +298,13 @@
     private async Task DibujarNodoEnCanvas(Nodo nodo)
     {
         var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve
-            };
+        {
+            ReferenceHandler = ReferenceHandler.Preserve,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
 
         Nodo[] nodos = { nodo };
-        var nodoInfo = JsonSerializer.Serialize(nodos, options);
+        var nodoInfo = JsonSerializer.Serialize(new[] { nodo }, options);
         await module.InvokeVoidAsync("dibujarNodoIndividual", mapaCanvasRef, nodoInfo);
     }
 
@@ -319,7 +312,8 @@
     {
         var options = new JsonSerializerOptions
             {
-                ReferenceHandler = ReferenceHandler.Preserve
+                ReferenceHandler = ReferenceHandler.Preserve,
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
         // Paso 1: calcular direccion
@@ -441,12 +435,16 @@
         InicializarVehiculos(10); //Numero de vehiculos 
 
         temporizador = new System.Timers.Timer(1000); // Intervalo de 1 segundo
-        temporizador.Elapsed += (sender, args) =>
-        {
+        temporizador.Elapsed += async (sender, args) =>
+        { 
             if (simulacionActiva)
             {
-                MoverVehiculos();
-                InvokeAsync(StateHasChanged);
+                MoverVehiculos(); // mueve y actualiza conteo
+                await InvokeAsync(async () =>
+                {
+                await DibujarMapaEnCanvasDesdeBlazor(); // redibuja ya con conteos correctos
+                StateHasChanged(); // actualiza tabla y Blazor
+                });
             }
         };
         temporizador.Start();
@@ -470,26 +468,27 @@
         }
     }
 
+
+
     private void MoverVehiculos()
     {
+        // Mover vehículos
         foreach (var vehiculo in vehiculos)
         {
             var direcciones = new List<Nodo?>
-            {
-                vehiculo.NodoActual.ReferenciaArriba,
-                vehiculo.NodoActual.ReferenciaAbajo,
-                vehiculo.NodoActual.ReferenciaIzquierda,
-                vehiculo.NodoActual.ReferenciaDerecha
-            };
+        {
+            vehiculo.NodoActual.ReferenciaArriba,
+            vehiculo.NodoActual.ReferenciaAbajo,
+            vehiculo.NodoActual.ReferenciaIzquierda,
+            vehiculo.NodoActual.ReferenciaDerecha
+        };
 
             var posibles = direcciones.Where(n => n != null).ToList();
-        
             if (posibles.Count == 0)
                 continue;
 
             Nodo? siguienteNodo = null;
 
-            //Buscar direccion
             foreach (var destino in posibles.OrderBy(_ => aleatorio.Next()))
             {
                 if (!destino.TieneSemaforo)
@@ -497,12 +496,14 @@
                     siguienteNodo = destino;
                     break;
                 }
-            
+
                 var dx = destino.PosX - vehiculo.NodoActual.PosX;
                 var dy = destino.PosY - vehiculo.NodoActual.PosY;
                 bool dirVertical = dy != 0;
                 bool dirHorizontal = dx != 0;
-                if ((dirVertical && Semaforo.EstadoVertical) || (dirHorizontal && Semaforo.EstadoHorizontal))
+
+                if ((dirVertical && Semaforo.EstadoVertical) ||
+                    (dirHorizontal && Semaforo.EstadoHorizontal))
                 {
                     siguienteNodo = destino;
                     break;
@@ -514,14 +515,34 @@
                 vehiculo.NodoAnterior = vehiculo.NodoActual.Informacion?.ToString() ?? "";
                 vehiculo.NodoActual = siguienteNodo;
                 vehiculo.SeMovio = true;
-                _ = Task.Run(async () =>
-                {
-                    await Task.Delay(900);
-                    vehiculo.SeMovio = false;
-                });
-
             }
         }
+
+        // Reiniciar conteo
+        foreach (var nodo in ObtenerTodosLosNodos())
+        {
+            if (nodo.ConteoActualVehiculos > 0)
+            {
+                Console.WriteLine($"[MAPA] Nodo {nodo.Informacion} tiene {nodo.ConteoActualVehiculos} vehículos");
+            }
+            nodo.ConteoActualVehiculos = 0;
+        }
+
+        // Contar de nuevo
+        foreach (var vehiculo in vehiculos)
+        {
+            vehiculo.NodoActual.ConteoActualVehiculos++;
+        }
+
+        // Marcar el movimiento como visualmente temporal
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(900); // duración del resaltado
+            foreach (var vehiculo in vehiculos)
+                vehiculo.SeMovio = false;
+
+            await InvokeAsync(StateHasChanged); // actualizar tabla y UI
+        });
     }
 
     private List<Nodo> ObtenerTodosLosNodos()
