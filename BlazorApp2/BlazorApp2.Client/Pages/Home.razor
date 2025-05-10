@@ -1,802 +1,234 @@
 ﻿@page "/"
-@using BlazorApp2.Share
-@using System.Text.Json
-@using System.Diagnostics
-@using System.Text.Json.Serialization
-@inject HttpClient Http
-@inject PdfGenerator PdfGenerator
+@using Microsoft.AspNetCore.Components
 @inject NavigationManager Navigation
-@inject IJSRuntime JSRuntime
 
-<PageTitle>Red Vial - Análisis</PageTitle>
+<PageTitle>Red Vial Inteligente</PageTitle>
 
-<h1>Análisis viales</h1>
+<div class="presentation-container">
 
-<div class="d-flex gap-2 mb-3">
-    <button @onclick="Simular" class="btn btn-primary">
-        Simular Cambios
-    </button>
-    <button @onclick="Cargar" class="btn btn-primary">
-        Cargar Detalle
-    </button>
-    <button @onclick="BorrarTodosRegistros" class="btn btn-danger">
-        Borrar Todos
-    </button>
-</div>
-
-@if (!string.IsNullOrEmpty(mensajeError))
-{
-    <div class="alert alert-danger">
-        @mensajeError
+    <div class="header-section animate_animated animate_fadeIn">
+        <h1 class="title">🚦 Red Vial Inteligente</h1>
+        <h2 class="subtitle">Sistema de Análisis y Simulación de Tráfico en Tiempo Real</h2>
     </div>
-}
 
-<div class="row mt-4">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Filtros Básicos</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="nodoId" class="form-label">Nodo ID:</label>
-                        <select @bind="nodoIdFiltro" class="form-select" id="nodoId">
-                            <option value="">Todos</option>
-                            <option value="1">1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="direccion" class="form-label">Dirección:</label>
-                        <select @bind="direccionFiltro" class="form-select" id="direccion">
-                            <option value="">Todos</option>
-                            <option value="Vertical">Vertical</option>
-                            <option value="Horizontal">Horizontal</option>
-                        </select>
-                    </div>
-                    <div class="col-md-12 mt-3 d-flex justify-content-end">
-                        <button @onclick="AplicarFiltros" class="btn btn-primary">
-                            @if (isLoading)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span class="visually-hidden">Cargando...</span>
-                            }
-                            Aplicar Filtros
-                        </button>
-                    </div>
+    <div class="tech-section animate_animated animatefadeIn animate_delay-1s">
+        <h3 class="section-title">🛠 Tecnologías</h3>
+        <div class="tech-grid">
+            <div class="tech-item"><span class="check">✔</span> Blazor WebAssembly</div>
+            <div class="tech-item"><span class="check">✔</span> ASP.NET Core</div>
+            <div class="tech-item"><span class="check">✔</span> Entity Framework Core</div>
+            <div class="tech-item"><span class="check">✔</span> JavaScript Interop</div>
+            <div class="tech-item"><span class="check">✔</span> Generación de PDFs</div>
+        </div>
+    </div>
+
+    <div class="objective-section animate_animated animatefadeIn animate_delay-2s">
+        <h3 class="section-title">🎯 Objetivo</h3>
+        <p>Desarrollar una solución <strong>innovadora</strong> para monitorear, analizar y optimizar el flujo vehicular en cruces semafóricos, identificando:</p>
+        <ul class="feature-list">
+            <li>✅ Intersecciones congestionadas</li>
+            <li>✅ Cuellos de botella</li>
+            <li>✅ Patrones de tráfico</li>
+            <li>✅ Eficiencia de semáforos</li>
+        </ul>
+    </div>
+
+
+    <div class="features-section">
+        <h3 class="section-title">🔥 Características Destacadas</h3>
+
+        <div class="feature-card animate_animated animate_fadeInLeft">
+            <h4>📊 Dashboard Interactivo</h4>
+            <ul>
+                <li>Filtros avanzados por <strong>Nodo ID</strong>, <strong>Dirección</strong> (Vertical/Horizontal) y <strong>Tipo de Análisis</strong></li>
+                <li>Tablas dinámicas con paginación</li>
+                <li>Exportación a PDF con un solo clic</li>
+            </ul>
+        </div>
+
+        <div class="feature-card animate_animated animate_fadeInRight">
+            <h4>🔄 Simulación en Tiempo Real</h4>
+            <ul>
+                <li>Modelado de cambios de semáforos</li>
+                <li>Cálculo de vehículos esperados, tiempos de cruce y congestión</li>
+                <li>Integración con APIs para procesamiento de datos</li>
+            </ul>
+        </div>
+
+        <div class="feature-card animate_animated animate_fadeInLeft">
+            <h4>🗺️ Visualización de Red Vial</h4>
+            <ul>
+                <li>Mapa interactivo dibujado en Canvas</li>
+                <li>Nodos y conexiones entre calles</li>
+                <li>Semaforización inteligente con lógica de estados (Verde/Rojo)</li>
+            </ul>
+        </div>
+
+        <div class="feature-card animate_animated animate_fadeInRight">
+            <h4>📈 Análisis Especializados</h4>
+            <div class="analysis-types">
+                <div>
+                    <h5>Datos Detallados por Semáforo</h5>
+                    <ul>
+                        <li>Promedio de vehículos por cambio</li>
+                        <li>Tiempo de espera estimado</li>
+                    </ul>
+                </div>
+                <div>
+                    <h5>Intersecciones con Mayor Congestión</h5>
+                    <ul>
+                        <li>Indicadores de saturación</li>
+                    </ul>
+                </div>
+                <div>
+                    <h5>Detección de Cuellos de Botella</h5>
+                    <ul>
+                        <li>Puntos críticos en la red vial</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Análisis Especializados</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-8">
-                        <label for="tipoAnalisis" class="form-label">Tipo de Análisis:</label>
-                        <select @bind="tipoAnalisis" class="form-select" id="tipoAnalisis">
-                            <option value="0">Datos Detallados</option>
-                            <option value="1">Intersecciones con Mayor Congestión</option>
-                            <option value="2">Cuellos de Botella</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4 d-flex align-items-end">
-                        <button @onclick="AplicarFiltros" class="btn btn-primary">
-                            @if (isLoading)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <span class="visually-hidden">Cargando...</span>
-                            }
-                            Aplicar Filtros
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="action-section animate_animated animatefadeInUp animate_delay-3s">
+        <button class="action-btn" @onclick="NavigateToDemo">
+            🚀 Ver Demostración
+        </button>
     </div>
 </div>
-
-@if (isLoading && datosCargados == false)
-{
-    <div class="text-center mt-4">
-        <div class="spinner-border" role="status">
-            <span class="visually-hidden">Cargando...</span>
-        </div>
-    </div>
-}
-
-@if (datosCargados)
-{
-    <div class="mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>@tituloResultados</h3>
-            <div>
-                <button @onclick="DescargarPdf" class="btn btn-sm btn-outline-success">
-                    Exportar esta vista
-                </button>
-            </div>
-        </div>
-
-        @if (totalItems > 0)
-        {
-            @if (mostrarPaginacion)
-            {
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div>
-                        Mostrando @((paginaActual - 1) * 10 + 1)-@Math.Min(paginaActual * 10, totalItems)
-                        de @totalItems registros
-                    </div>
-                    <div>
-                        <button @onclick="() => CambiarPagina(1)"
-                        class="btn btn-outline-primary btn-sm"
-                        disabled="@(paginaActual == 1)">
-                            &lt;&lt;
-                        </button>
-                        <button @onclick="() => CambiarPagina(paginaActual - 1)"
-                        class="btn btn-outline-primary btn-sm mx-1"
-                        disabled="@(paginaActual == 1)">
-                            &lt;
-                        </button>
-                        <span class="mx-2">Página @paginaActual de @totalPaginas</span>
-                        <button @onclick="() => CambiarPagina(paginaActual + 1)"
-                        class="btn btn-outline-primary btn-sm mx-1"
-                        disabled="@(paginaActual == totalPaginas)">
-                            &gt;
-                        </button>
-                        <button @onclick="() => CambiarPagina(totalPaginas)"
-                        class="btn btn-outline-primary btn-sm"
-                        disabled="@(paginaActual == totalPaginas)">
-                            &gt;&gt;
-                        </button>
-                    </div>
-                </div>
-            }
-
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            @if (tipoAnalisis == "0")
-                            {
-                                <th>Nodo ID</th>
-                                <th>Dirección</th>
-                                <th>Total Cambios</th>
-                                <th>Promedio por cruce </th>
-                                <th>Vehículos Esperados</th>
-                                <th>Promedio Vehículos/Cambio</th>
-                                <th>Tiempo Promedio (s)</th>
-                            }
-                            else if (tipoAnalisis == "1")
-                            {
-                                <th>Nodo ID</th>
-                                <th>Total Vehículos</th>
-                                <th>Total Cambios</th>
-                                <th>Indicador Congestión</th>
-                            }
-                            else
-                            {
-                                <th>Nodo ID</th>
-                                <th>Dirección</th>
-                                <th>Total Cambios</th>
-                                <th>Vehículos Esperados</th>
-                                <th>Indicador Congestión</th>
-                            }
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @for (int i = 0; i < 10; i++)
-                        {
-                            var item = GetItem(i);
-                            @if (item != null)
-                            {
-                                <tr>
-                                    @if (tipoAnalisis == "0")
-                                    {
-                                        var detalle = item as DetalleSemaforo;
-                                        <td>@detalle?.NodoId</td>
-                                        <td>@detalle?.DireccionSemaforo</td>
-                                        <td>@detalle?.totalCambios</td>
-                                        <td>@detalle?.TiempoCrucePromedio.ToString("F2")</td>
-                                        <td>@detalle?.SumaCantidadEspera</td>
-                                        <td>@detalle?.PromedioVehiculosPorCambio.ToString("F2")</td>
-                                        <td>@detalle?.TiempoPromedioPorCarro.ToString("F2")</td>
-                                    }
-                                    else if (tipoAnalisis == "1")
-                                    {
-                                        var interseccion = item as InterseccionCongestionada;
-                                        <td>@interseccion?.NodoId</td>
-                                        <td>@interseccion?.TotalVehiculos</td>
-                                        <td>@interseccion?.TotalCambios</td>
-                                        <td>@interseccion?.IndicadorCongestion.ToString("F2")</td>
-                                    }
-                                    else
-                                    {
-                                        var cuello = item as CuelloBotella;
-                                        <td>@cuello?.NodoId</td>
-                                        <td>@cuello?.DireccionSemaforo</td>
-                                        <td>@cuello?.TotalCambios</td>
-                                        <td>@cuello?.SumaCantidadEspera</td>
-                                        <td>@cuello?.IndicadorCongestion.ToString("F2")</td>
-                                    }
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="alert alert-info mt-4">
-                <i class="bi bi-info-circle-fill me-2"></i> No existen datos para mostrar con los filtros aplicados.
-            </div>
-        }
-    </div>
-}
-else if (datosCargados && totalItems == 0)
-{
-    <div class="alert alert-warning mt-4">
-        No hay datos disponibles para los criterios seleccionados.
-    </div>
-}
-
-@if (isClientSide)
-{
-    <script suppress-error="BL9992">
-        function downloadFile(base64Data, fileName, mimeType) {
-        try {
-        const byteCharacters = atob(base64Data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], {type: mimeType});
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-
-        setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        }, 100);
-        } catch (error) {
-        console.error("Error en downloadFile:", error);
-        }
-        }
-    </script>
-}
-<canvas @ref="mapaCanvasRef2" width="600" height="600"
-style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
-<button @onclick="DibujarMapaEnCanvasDesdeBlazor">Dibujar Mapa</button>
-<p>@resultado</p>
 
 @code {
-
-    private ElementReference mapaCanvasRef2;
-    public string valorInicio = "";
-    public string valorFinal = "";
-    private bool simulando = false;
-
-    private IJSObjectReference? module;
-    private List<DetalleSemaforo> detallesAcumulados = new();
-
-    public Nodo nodo1 = new Nodo();
-    public Nodo nodo2 = new Nodo();
-    public Nodo nodo3 = new Nodo();
-    public Nodo nodo4 = new Nodo();
-    public Nodo nodo5 = new Nodo();
-    public Nodo nodo6 = new Nodo();
-    public Nodo nodo7 = new Nodo();
-    public Nodo nodo8 = new Nodo();
-    public Nodo nodo9 = new Nodo();
-    string resultado = "";
-    bool estadoV;
-    bool estadoH;
-    private DetalleSemaforoContainer contenedorDetalle = new();
-    private InterseccionCongestionadaContainer contenedorIntersecciones = new();
-    private CuelloBotellaContainer contenedorCuellos = new();
-
-    private bool isLoading = false;
-    private bool datosCargados = false;
-    private bool mostrarPaginacion = true;
-    private int? nodoIdFiltro;
-    private string direccionFiltro = "";
-    private string tipoAnalisis = "0";
-    private string mensajeError = "";
-    private string tituloResultados = "Datos de Semáforos";
-    private bool isClientSide = false;
-    private int paginaActual = 1;
-    private int totalPaginas = 1;
-    private int totalItems = 0;
-    protected override async Task OnInitializedAsync()
+    private void NavigateToDemo()
     {
-        _ = Semaforo.IniciarSemaforo();
-    }
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            try
-            {
-                module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/map.js");
-                Console.WriteLine("Módulo JavaScript cargado correctamente");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error al cargar módulo JS: {ex.Message}");
-            }
-        }
-    }
-    private void Actualizar()
-    {
-        estadoV = Semaforo.EstadoVertical;
-        estadoH = Semaforo.EstadoHorizontal;
-        InvokeAsync(StateHasChanged);
-    }
-
-    public void Dispose()
-    {
-        Semaforo.OnEstadoChanged -= Actualizar;
-    }
-    private async Task DibujarMapaEnCanvasDesdeBlazor()
-    {
-        try
-        {
-            Console.WriteLine("Iniciando dibujo del mapa...");
-
-            if (module == null)
-            {
-                Console.WriteLine("Módulo JS no cargado, intentando cargar...");
-                module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/map.js");
-            }
-
-            var canvasExists = await JSRuntime.InvokeAsync<bool>("eval",
-                "document.contains(document.querySelector('canvas'))");
-
-            if (!canvasExists)
-            {
-                Console.WriteLine("Error: Elemento canvas no encontrado en el DOM");
-                return;
-            }
-
-            await module.InvokeVoidAsync("limpiarCanvas", mapaCanvasRef2);
-            Console.WriteLine("Canvas limpiado");
-
-
-            var nodos = new[] { nodo1, nodo2, nodo3, nodo4, nodo5, nodo6, nodo7, nodo8, nodo9 };
-            foreach (var nodo in nodos)
-            {
-                await DibujarNodoEnCanvas(nodo);
-            }
-
-
-            await DibujarConexiones();
-
-            Console.WriteLine("Mapa dibujado completamente");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al dibujar mapa: {ex.Message}");
-        }
-    }
-    private async Task DibujarNodoEnCanvas(Nodo nodo)
-    {
-
-        var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve
-            };
-
-
-        Nodo[] nodos = { nodo };
-        var nodoInfo = JsonSerializer.Serialize(nodos, options);
-        await module.InvokeVoidAsync("dibujarNodoIndividual", mapaCanvasRef2, nodoInfo);
-    }
-
-    private async Task DibujarCalleEnCanvas(Nodo desde, Nodo hasta, bool EsInterseccion)
-    {
-        var options = new JsonSerializerOptions
-            {
-                ReferenceHandler = ReferenceHandler.Preserve
-            };
-
-        var calleInfo = new
-        {
-            DesdeX = desde.PosX,
-            DesdeY = desde.PosY,
-            HastaX = hasta.PosX,
-            HastaY = hasta.PosY,
-            ConteoActualVehiculos = desde.ConteoActualVehiculos,
-            Informacion2 = hasta.Informacion.ToString(),
-            Informacion1 = desde.Informacion.ToString(),
-            EsInterseccion = EsInterseccion
-        };
-
-        object[] nodos = { calleInfo }
-        ;
-        var calle = JsonSerializer.Serialize(nodos, options);
-
-        if (hasta != null)
-        {
-
-            await module.InvokeVoidAsync("dibujarCalleIndividual", mapaCanvasRef2, calle);
-        }
-    }
-    private async Task DibujarConexiones()
-    {
-        var conexiones = new List<(Nodo, Nodo, bool)>
-    {
-        (nodo1, nodo1.ReferenciaDerecha, false),
-        (nodo2, nodo2.ReferenciaDerecha, false),
-        (nodo2, nodo2.ReferenciaAbajo, false),
-        (nodo3, nodo3.ReferenciaAbajo, false),
-        (nodo4, nodo4.ReferenciaDerecha, false),
-        (nodo4, nodo4.ReferenciaArriba, false),
-
-        (nodo5, nodo5.ReferenciaDerecha, true),
-        (nodo5, nodo5.ReferenciaIzquierda, true),
-        (nodo5, nodo5.ReferenciaArriba, true),
-        (nodo5, nodo5.ReferenciaArriba, true),
-
-        (nodo5, nodo5.ReferenciaDerecha, false),
-        (nodo5, nodo5.ReferenciaIzquierda, false),
-        (nodo5, nodo5.ReferenciaArriba, false),
-        (nodo5, nodo5.ReferenciaArriba, false),
-
-        (nodo5, nodo5.ReferenciaAbajo,false),
-        (nodo6, nodo6.ReferenciaIzquierda,false),
-        (nodo6, nodo6.ReferenciaAbajo,false),
-        (nodo7, nodo7.ReferenciaArriba,false),
-        (nodo8, nodo8.ReferenciaIzquierda,false),
-        (nodo8, nodo8.ReferenciaArriba,false),
-        (nodo9, nodo9.ReferenciaIzquierda,false)
-    };
-
-        foreach (var (desde, hasta, EsCentral) in conexiones)
-        {
-            if (hasta != null)
-            {
-                await DibujarCalleEnCanvas(desde, hasta, EsCentral);
-            }
-        }
-    }
-    protected override void OnInitialized()
-    {
-        estadoV = Semaforo.EstadoVertical;
-        estadoH = Semaforo.EstadoHorizontal;
-        Semaforo.OnEstadoChanged += Actualizar;
-        nodo2.semaforo = new Semaforo(2, 10, 10); 
-        nodo4.semaforo = new Semaforo(4, 10, 10);
-        nodo5.semaforo = new Semaforo(5, 10, 10);
-        nodo6.semaforo = new Semaforo(6, 10, 10);
-        nodo8.semaforo = new Semaforo(8, 10, 10);
-        nodo1.ReferenciaDerecha = nodo2;
-        nodo1.Informacion = "Nodo 1";
-        nodo1.ConteoActualVehiculos = 10;
-
-        nodo2.ReferenciaDerecha = nodo3;
-        nodo2.ReferenciaAbajo = nodo5;
-        nodo2.TieneSemaforo = true;
-        nodo2.Informacion = "Nodo 2";
-
-        nodo3.ReferenciaAbajo = nodo6;
-        nodo3.Informacion = "Nodo 3";
-
-        nodo4.ReferenciaDerecha = nodo5;
-        nodo4.ReferenciaArriba = nodo1;
-        nodo4.TieneSemaforo = true;
-        nodo4.Informacion = "Nodo 4";
-
-        nodo5.ReferenciaDerecha = nodo6;
-        nodo5.ReferenciaIzquierda = nodo4;
-        nodo5.ReferenciaAbajo = nodo8;
-        nodo5.ReferenciaArriba = nodo2;
-        nodo5.TieneSemaforo = true;
-        nodo5.Informacion = "Nodo 5";
-
-        nodo6.ReferenciaAbajo = nodo9;
-        nodo6.ReferenciaIzquierda = nodo5;
-        nodo6.TieneSemaforo = true;
-        nodo6.Informacion = "Nodo 6";
-
-        nodo7.ReferenciaArriba = nodo4;
-        nodo7.Informacion = "Nodo 7";
-
-        nodo8.ReferenciaIzquierda = nodo7;
-        nodo8.ReferenciaArriba = nodo5;
-        nodo8.TieneSemaforo = true;
-        nodo8.Informacion = "Nodo 8";
-
-        nodo9.ReferenciaIzquierda = nodo8;
-        nodo9.Informacion = "Nodo 9";
-
-        nodo1.PosX = 100; nodo1.PosY = 100;
-        nodo2.PosX = 300; nodo2.PosY = 100;
-        nodo3.PosX = 500; nodo3.PosY = 100;
-
-        nodo4.PosX = 100; nodo4.PosY = 300;
-        nodo5.PosX = 300; nodo5.PosY = 300;
-        nodo6.PosX = 500; nodo6.PosY = 300;
-
-        nodo7.PosX = 100; nodo7.PosY = 500;
-        nodo8.PosX = 300; nodo8.PosY = 500;
-        nodo9.PosX = 500; nodo9.PosY = 500;
-    }
-
-    private object? GetItem(int index)
-    {
-        return tipoAnalisis switch
-        {
-            "0" => contenedorDetalle.GetItem(index),
-            "1" => contenedorIntersecciones.GetItem(index),
-            "2" => contenedorCuellos.GetItem(index),
-            _ => null
-        };
-    }
-
-    private async Task CargarDatos()
-    {
-        datosCargados = false;
-        await AplicarFiltros();
-    }
-
-    private async Task AplicarFiltros()
-    {
-        isLoading = true;
-        mensajeError = "";
-        paginaActual = 1;
-
-        try
-        {
-            if (tipoAnalisis == "0")
-            {
-                var url = $"https://localhost:7108/api/DetalleSemaforo/ObtenerFiltradoCombinado?pagina={paginaActual}";
-
-                if (nodoIdFiltro.HasValue)
-                    url += $"&nodoId={nodoIdFiltro}";
-
-                if (!string.IsNullOrEmpty(direccionFiltro))
-                    url += $"&direccion={Uri.EscapeDataString(direccionFiltro)}";
-
-                contenedorDetalle = await Http.GetFromJsonAsync<DetalleSemaforoContainer>(url);
-                tituloResultados = "Datos Filtrados de Semáforos";
-                totalItems = contenedorDetalle?.TotalItems ?? 0;
-                mostrarPaginacion = true;
-            }
-            else if (tipoAnalisis == "1")
-            {
-                contenedorIntersecciones = await Http.GetFromJsonAsync<InterseccionCongestionadaContainer>(
-                    "https://localhost:7108/api/DetalleSemaforo/InterseccionesMasCongestionadas");
-                tituloResultados = "Intersecciones con Mayor Congestión";
-                totalItems = contenedorIntersecciones?.TotalItems ?? 0;
-                mostrarPaginacion = false;
-            }
-            else
-            {
-                contenedorCuellos = await Http.GetFromJsonAsync<CuelloBotellaContainer>(
-                    "https://localhost:7108/api/DetalleSemaforo/AnalisisCuelloBotella");
-                tituloResultados = "Análisis de Cuellos de Botella";
-                totalItems = contenedorCuellos?.TotalItems ?? 0;
-                mostrarPaginacion = true;
-            }
-
-            totalPaginas = (int)Math.Ceiling(totalItems / 10.0);
-            datosCargados = true;
-        }
-        catch (Exception ex)
-        {
-            mensajeError = $"Error al cargar datos: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
-            StateHasChanged();
-        }
-    }
-
-    private async Task CambiarPagina(int nuevaPagina)
-    {
-        if (nuevaPagina < 1 || nuevaPagina > totalPaginas)
-            return;
-
-        paginaActual = nuevaPagina;
-        await InvokeAsync(async () =>
-        {
-            await AplicarFiltros();
-            StateHasChanged();
-        });
-    }
-    private async Task Simular()
-    {
-        simulando = true;
-
-        while (simulando)
-        {
-
-            SimularCambios();
-
-
-            await Task.Delay(2000); 
-        }
-    }
-    private async Task SimularCambios()
-    {
-        mensajeError = "";
-
-        try
-        {
-            var nodosConSemaforo = new Dictionary<int, Nodo>
-        {
-            { 2, nodo2 }, { 4, nodo4 }, { 5, nodo5 }, { 6, nodo6 }, { 8, nodo8 }
-        };
-
-            foreach (var (nodoId, nodo) in nodosConSemaforo)
-            {
-                if (nodo?.TieneSemaforo == false)
-                {
-                    mensajeError += $"Nodo {nodoId} no tiene semáforo configurado. ";
-                    continue;
-                }
-
-                foreach (var direccion in new[] { "Vertical", "Horizontal" })
-                {
-                    bool esVertical = direccion == "Vertical";
-                    var detalle = new DetalleSemaforo(nodoId, direccion);
-
-                    int vehiculosEsperando = esVertical ?
-                        nodo.VehiculosEnEsperaVertical :
-                        nodo.VehiculosEnEsperaHorizontal;
-
-                    int tiempoRojo = esVertical ?
-                        nodo.semaforo.TiempoVerdeHorizontal :
-                        nodo.semaforo.TiempoVerdeVertical;
-
-                    int tiempoVerde = esVertical ?
-                        nodo.semaforo.TiempoVerdeVertical :
-                        nodo.semaforo.TiempoVerdeHorizontal;
-
-                    int vehiculosPasaron = await nodo.SacarVehiculosDelNodo(nodo);
-                /*
-                    detalle.RegistrarCambioEstado(
-                        cantidadVehiculosEsperando: vehiculosEsperando,
-                        tiempoRojo: tiempoRojo,
-                        vehiculosPasaron: vehiculosPasaron,
-                        tiempoVerde: tiempoVerde
-                    );
-                    */
-                    detalle.FinalizarRegistro();
-
-                    var response = await Http.PostAsJsonAsync(
-                        "https://localhost:7108/api/DetalleSemaforo/GuardarSemaforo",
-                        detalle
-                    );
-
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        mensajeError += $"Error guardando nodo {nodoId} ({direccion}). ";
-                    }
-                }
-            }
-
-
-            mensajeError = string.IsNullOrEmpty(mensajeError)
-                ? "Datos registrados correctamente."
-                : $"Completado con errores: {mensajeError}";
-        }
-        catch (Exception ex)
-        {
-            mensajeError = $"Error durante el registro: {ex.Message}";
-        }
-    }
-    private async void Cargar()
-    {
-        simulando = false;
-
-        using var http = new HttpClient();
-        http.BaseAddress = new Uri("https://localhost:7108");
-
-        try
-        {
-            var response = await http.PostAsync("/api/DetalleSemaforo/EjecutarEstadisticas", null);
-
-            if (response.IsSuccessStatusCode)
-            {
-                Console.WriteLine("Estadísticas actualizadas.");
-            }
-            else
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error al actualizar estadísticas: {errorContent}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Excepción: {ex.Message}");
-        }
-
-        CargarDatos();
-    }
-
-
-
-    private async Task BorrarTodosRegistros()
-    {
-        try
-        {
-            var response = await Http.DeleteAsync("https://localhost:7108/api/DetalleSemaforo/BorrarTodos");
-
-            if (response.IsSuccessStatusCode)
-            {
-                mensajeError = "Todos los registros han sido borrados";
-                datosCargados = false;
-                contenedorDetalle = new();
-                contenedorIntersecciones = new();
-                contenedorCuellos = new();
-            }
-            else
-            {
-                mensajeError = "Error al borrar registros";
-            }
-        }
-        catch (Exception ex)
-        {
-            mensajeError = $"Error: {ex.Message}";
-        }
-    }
-
-    private async Task DescargarPdf()
-    {
-        try
-        {
-            byte[] pdfBytes = null;
-
-            if (tipoAnalisis == "0")
-            {
-                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorDetalle, "0");
-            }
-            else if (tipoAnalisis == "1")
-            {
-                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorIntersecciones, "1");
-            }
-            else
-            {
-                pdfBytes = PdfGenerator.GeneratePdfFromContainer(contenedorCuellos, "2");
-            }
-
-            if (pdfBytes == null || pdfBytes.Length == 0)
-            {
-                mensajeError = "Error: El PDF generado está vacío";
-                return;
-            }
-
-            await JSRuntime.InvokeVoidAsync(
-                "downloadFile",
-                Convert.ToBase64String(pdfBytes),
-                $"Reporte_{tituloResultados.Replace(" ", "_")}_{DateTime.Now:yyyyMMddHHmmss}.pdf",
-                "application/pdf"
-            );
-        }
-        catch (Exception ex)
-        {
-            mensajeError = $"Error al generar PDF: {ex.Message}";
-        }
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender) isClientSide = true;
+        Navigation.NavigateTo("/RedVial");
     }
 }
+
+<style>
+    .presentation-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+    }
+
+    .header-section {
+        text-align: center;
+        margin-bottom: 3rem;
+        background: linear-gradient(135deg, #1e5799 0%,#207cca 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .title {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+        font-size: 1.5rem;
+        font-weight: normal;
+        opacity: 0.9;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        margin: 2rem 0 1rem;
+        color: #1e5799;
+        border-bottom: 2px solid #1e5799;
+        padding-bottom: 0.5rem;
+    }
+
+    .tech-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .tech-item {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .check {
+        color: #28a745;
+        font-weight: bold;
+        margin-right: 0.5rem;
+    }
+
+    .feature-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+
+    .features-section {
+        margin-top: 2rem;
+    }
+
+    .feature-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border-left: 4px solid #1e5799;
+    }
+
+        .feature-card h4 {
+            margin-top: 0;
+            color: #1e5799;
+            font-size: 1.3rem;
+        }
+
+    .analysis-types {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
+    }
+
+        .analysis-types h5 {
+            color: #1e5799;
+            margin-bottom: 0.5rem;
+        }
+
+    .action-section {
+        text-align: center;
+        margin-top: 3rem;
+    }
+
+    .action-btn {
+        background: linear-gradient(135deg, #1e5799 0%,#207cca 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        font-size: 1.2rem;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+        .action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+    .animate__animated {
+        animation-duration: 1s;
+    }
+</style>
