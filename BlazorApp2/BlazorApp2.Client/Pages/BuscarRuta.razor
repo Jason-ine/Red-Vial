@@ -3,16 +3,20 @@
 @inject IJSRuntime JSRuntime
 
 <PageTitle>Buscar Ruta</PageTitle>
-<div style="display: flex; flex-direction:column; align-items:center;">
+<div class="route-search-container" style="display: flex; flex-direction:column; align-items:center;">
+    <div class="section-title">
     <h3>Buscar Ruta</h3>
+    </div>
     <img src="images/mapa.png" witdh="300" height="300" />
-</div>
+
 
 <div style="display: flex; flex-direction:column; align-items:center; gap: 5px;">
 
 
     <div style="margin-top: 10px; display: flex; flex-direction:column; align-items:center;gap:5px;">
-        <h4>Seleccione la intersección inicial y la final</h4>
+            <div class="section-subtitle">
+                <h4>Seleccione la intersección inicial y la final</h4>
+            </div>
         <select @bind="valorInicio" class="form-select" style="width:300px;" aria-label="Seleccione el Nodo Inicial" required>
             <option value="" disabled selected hidden>Nodo Inicial...</option>
             <option value="1">Interseccion 1</option>
@@ -48,7 +52,7 @@
         <p>@mensaje</p>
     </div>
 </div>
-
+</div>
 
 @code {
 

@@ -669,14 +669,14 @@ style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
                         nodo.semaforo.TiempoVerdeHorizontal;
 
                     int vehiculosPasaron = await nodo.SacarVehiculosDelNodo(nodo);
-
+                /*
                     detalle.RegistrarCambioEstado(
                         cantidadVehiculosEsperando: vehiculosEsperando,
                         tiempoRojo: tiempoRojo,
                         vehiculosPasaron: vehiculosPasaron,
                         tiempoVerde: tiempoVerde
                     );
-
+                    */
                     detalle.FinalizarRegistro();
 
                     var response = await Http.PostAsJsonAsync(
