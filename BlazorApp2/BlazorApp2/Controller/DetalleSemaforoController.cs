@@ -3,6 +3,8 @@ using BlazorApp2.Share;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace BlazorApp2.Controller
@@ -166,6 +168,66 @@ namespace BlazorApp2.Controller
 
             return Ok(result);
         }
+
+        [HttpGet("SumaAyB")]
+        public async Task<ActionResult<double>> GetSumaAyB(string nodos)
+        {
+            if (string.IsNullOrEmpty(nodos))
+            {
+                return BadRequest("No se recibieron nodos.");
+            }
+
+            string[] nodosArray = nodos.Split(';');
+            string consultaSQL = "";
+            for(int i = 0; i < nodosArray.Length; i++)
+            { 
+              
+                consultaSQL += nodosArray[i] + ",";
+                
+            }
+            Console.WriteLine(consultaSQL);
+            consultaSQL = consultaSQL.TrimEnd(',');
+            Debug.WriteLine(consultaSQL);
+
+            if (nodos!=null && nodos.Length > 0)
+            {
+                double resultado = 0;
+                var sqlQuery = $"SELECT SUM(SumaCantidadEspera) AS TotalVehiculos FROM SemaforoEstadisticas WHERE NodoId IN ({consultaSQL})";
+                Debug.WriteLine(sqlQuery);
+                var conn =  _context.Database.GetDbConnection();
+
+                try
+                {
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
+
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = sqlQuery;
+                        var valor = cmd.ExecuteScalar();
+
+                        if (valor != DBNull.Value)
+                            resultado = Convert.ToDouble(valor);
+                        Debug.WriteLine(resultado);
+                    }
+                }
+                finally
+                {
+                    conn.Close();
+                }
+                return Ok(resultado);
+            }
+            else
+            {
+                return BadRequest("No se recibieron nodos.");
+            }
+        }
+
+
+
+
+
+
 
         [HttpGet("AnalisisCuelloBotella")]
         public async Task<ActionResult<CuelloBotellaContainer>> GetAnalisisCuelloBotella([FromQuery] int pagina = 1)

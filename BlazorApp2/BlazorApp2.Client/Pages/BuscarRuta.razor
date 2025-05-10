@@ -4,7 +4,7 @@
 
 <PageTitle>Buscar Ruta</PageTitle>
 <div style="display: flex; flex-direction:column; align-items:center;">
-<h2>Buscar Ruta</h2>
+    <h3>Buscar Ruta</h3>
     <img src="images/mapa.png" witdh="300" height="300" />
 </div>
 
@@ -12,40 +12,42 @@
 
 
     <div style="margin-top: 10px; display: flex; flex-direction:column; align-items:center;gap:5px;">
-    <h4>Seleccione la intersección inicial y la final</h4>
-    <select @bind="valorInicio" class="form-select" style="width:300px;" aria-label="Seleccione el Nodo Inicial" required>
-        <option value="" disabled selected hidden>Nodo Inicial...</option>
-        <option value="1">Interseccion 1</option>
-        <option value="2">Interseccion 2</option>
-        <option value="3">Interseccion 3</option>
-        <option value="4">Interseccion 4</option>
-        <option value="5">Interseccion 5</option>
-        <option value="6">Interseccion 6</option>
-        <option value="7">Interseccion 7</option>
-        <option value="8">Interseccion 8</option>
-        <option value="9">Interseccion 9</option>
-    </select>
-    <select @bind="valorFinal" class="form-select" style="width:300px" aria-label="Seleccione el Nodo Final" required>
-        <option value="" disabled selected hidden>Nodo Final...</option>
-        <option value="1">Interseccion 1</option>
-        <option value="2">Interseccion 2</option>
-        <option value="3">Interseccion 3</option>
-        <option value="4">Interseccion 4</option>
-        <option value="5">Interseccion 5</option>
-        <option value="6">Interseccion 6</option>
-        <option value="7">Interseccion 7</option>
-        <option value="8">Interseccion 8</option>
-        <option value="9">Interseccion 9</option>
-    </select>
-</div>
+        <h4>Seleccione la intersección inicial y la final</h4>
+        <select @bind="valorInicio" class="form-select" style="width:300px;" aria-label="Seleccione el Nodo Inicial" required>
+            <option value="" disabled selected hidden>Nodo Inicial...</option>
+            <option value="1">Interseccion 1</option>
+            <option value="2">Interseccion 2</option>
+            <option value="3">Interseccion 3</option>
+            <option value="4">Interseccion 4</option>
+            <option value="5">Interseccion 5</option>
+            <option value="6">Interseccion 6</option>
+            <option value="7">Interseccion 7</option>
+            <option value="8">Interseccion 8</option>
+            <option value="9">Interseccion 9</option>
+        </select>
+        <select @bind="valorFinal" class="form-select" style="width:300px" aria-label="Seleccione el Nodo Final" required>
+            <option value="" disabled selected hidden>Nodo Final...</option>
+            <option value="1">Interseccion 1</option>
+            <option value="2">Interseccion 2</option>
+            <option value="3">Interseccion 3</option>
+            <option value="4">Interseccion 4</option>
+            <option value="5">Interseccion 5</option>
+            <option value="6">Interseccion 6</option>
+            <option value="7">Interseccion 7</option>
+            <option value="8">Interseccion 8</option>
+            <option value="9">Interseccion 9</option>
+        </select>
+    </div>
 
-<button class="btn btn-primary" @onclick="BuscarNodo">Buscar Ruta</button>
-<div>
-    <canvas id="canvas3" @ref="rutaCanvasRef3" width="400" height="100"
-    style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+    <button class="btn btn-primary" @onclick="BuscarNodo">Buscar Ruta</button>
+    <div>
+        <canvas id="canvas3" @ref="rutaCanvasRef3" width="400" height="80"
+        style="border:1px solid #000; background-color:#f0f0f0;"></canvas>
+    </div>
+    <div>
+        <p>@mensaje</p>
+    </div>
 </div>
-</div>
-
 
 
 @code {
@@ -54,7 +56,7 @@
 
 
 
-
+    string mensaje = "";
 
     private ElementReference rutaCanvasRef3;
     private IJSObjectReference? module;
@@ -211,7 +213,7 @@
         await module.InvokeVoidAsync("limpiarCanvas", rutaCanvasRef3);
         await module.InvokeVoidAsync("dibujarRutaDeNodos", ruta, rutaCanvasRef3);
     }
-    public void BuscarNodo()
+    public async Task BuscarNodo()
     {
         Nodo[] camino;
         Nodo inicial = ObtenerNodoPorValor(valorInicio);
@@ -227,6 +229,18 @@
             }
 
             DibujarRutaAyB(nodosVisitados);
+
+            HttpClient httpClient = new HttpClient();
+            var response = await httpClient.GetAsync("https://localhost:7108/api/DetalleSemaforo/SumaAyB?nodos=" + nodosVisitados);
+            if (response.IsSuccessStatusCode)
+            {
+                var responseBody = response.Content.ReadAsStringAsync().Result;
+                mensaje = ("El flujo vehicular de esta ruta es de: " + responseBody);
+            }
+            else
+            {
+                mensaje = ("Error en la solicitud: " + response.StatusCode);
+            }
         }
         else
         {
