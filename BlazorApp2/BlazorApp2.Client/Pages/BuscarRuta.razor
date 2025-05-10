@@ -208,6 +208,7 @@
 
     public async void DibujarRutaAyB(string ruta)
     {
+        await module.InvokeVoidAsync("limpiarCanvas", rutaCanvasRef3);
         await module.InvokeVoidAsync("dibujarRutaDeNodos", ruta, rutaCanvasRef3);
     }
     public void BuscarNodo()

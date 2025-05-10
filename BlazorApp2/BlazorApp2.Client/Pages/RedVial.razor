@@ -50,39 +50,6 @@
     }
 </div>
 
-<select @bind="valorInicio" class="form-select" aria-label="Seleccione el Nodo Inicial" required>
-    <option value="" disabled selected hidden>Nodo Inicial...</option>
-    <option value="1">Interseccion 1</option>
-    <option value="2">Interseccion 2</option>
-    <option value="3">Interseccion 3</option>
-    <option value="4">Interseccion 4</option>
-    <option value="5">Interseccion 5</option>
-    <option value="6">Interseccion 6</option>
-    <option value="7">Interseccion 7</option>
-    <option value="8">Interseccion 8</option>
-    <option value="9">Interseccion 9</option>
-</select>
-
-<select @bind="valorFinal" class="form-select" aria-label="Seleccione el Nodo Final" required>
-    <option value="" disabled selected hidden>Nodo Final...</option>
-    <option value="1">Interseccion 1</option>
-    <option value="2">Interseccion 2</option>
-    <option value="3">Interseccion 3</option>
-    <option value="4">Interseccion 4</option>
-    <option value="5">Interseccion 5</option>
-    <option value="6">Interseccion 6</option>
-    <option value="7">Interseccion 7</option>
-    <option value="8">Interseccion 8</option>
-    <option value="9">Interseccion 9</option>
-</select>
-<button @onclick="DibujarMapaEnCanvasDesdeBlazor">Dibujar Mapa</button>
-<p>@resultado</p>
-
-
-<p>@resultado</p>
-<p>@estadoH</p>
-<p>@estadoV</p>
-
 <h1>Análisis viales</h1>
 
 @if (!string.IsNullOrEmpty(mensajeError))
@@ -646,37 +613,29 @@ else if (datosCargados && totalItems == 0)
 
     private async Task DibujarConexiones()
     {
-        var conexiones = new List<(Nodo, Nodo, bool)>
-        {
-            (nodo1, nodo1.ReferenciaDerecha, false),
-            (nodo2, nodo2.ReferenciaDerecha, false),
-            (nodo2, nodo2.ReferenciaAbajo, false),
-            (nodo3, nodo3.ReferenciaAbajo, false),
-            (nodo4, nodo4.ReferenciaDerecha, false),
-            (nodo4, nodo4.ReferenciaArriba, false),
-            (nodo5, nodo5.ReferenciaDerecha, true),
-            (nodo5, nodo5.ReferenciaIzquierda, true),
-            (nodo5, nodo5.ReferenciaArriba, true),
-            (nodo5, nodo5.ReferenciaArriba, true),
-            (nodo5, nodo5.ReferenciaDerecha, false),
-            (nodo5, nodo5.ReferenciaIzquierda, false),
-            (nodo5, nodo5.ReferenciaArriba, false),
-            (nodo5, nodo5.ReferenciaArriba, false),
-            (nodo5, nodo5.ReferenciaAbajo,false),
-            (nodo6, nodo6.ReferenciaIzquierda,false),
-            (nodo6, nodo6.ReferenciaAbajo,false),
-            (nodo7, nodo7.ReferenciaArriba,false),
-            (nodo8, nodo8.ReferenciaIzquierda,false),
-            (nodo8, nodo8.ReferenciaArriba,false),
-            (nodo9, nodo9.ReferenciaIzquierda,false)
-        };
-        foreach (var (desde, hasta, EsCentral) in conexiones)
-        {
-            if (hasta != null)
-            {
-                await DibujarCalleEnCanvas(desde, hasta, EsCentral);
-            }
-        }
+
+        await DibujarCalleEnCanvas(nodo1, nodo1.ReferenciaDerecha, false);
+        await DibujarCalleEnCanvas(nodo2, nodo2.ReferenciaDerecha, false);
+        await DibujarCalleEnCanvas(nodo2, nodo2.ReferenciaAbajo, false);
+        await DibujarCalleEnCanvas(nodo3, nodo3.ReferenciaAbajo, false);
+        await DibujarCalleEnCanvas(nodo4, nodo4.ReferenciaDerecha, false);
+        await DibujarCalleEnCanvas(nodo4, nodo4.ReferenciaArriba, false);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaDerecha, true);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaIzquierda, true);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaArriba, true);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaArriba, true);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaDerecha, false);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaIzquierda, false);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaArriba, false);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaArriba, false);
+        await DibujarCalleEnCanvas(nodo5, nodo5.ReferenciaAbajo, false);
+        await DibujarCalleEnCanvas(nodo6, nodo6.ReferenciaIzquierda, false);
+        await DibujarCalleEnCanvas(nodo6, nodo6.ReferenciaAbajo, false);
+        await DibujarCalleEnCanvas(nodo7, nodo7.ReferenciaArriba, false);
+        await DibujarCalleEnCanvas(nodo8, nodo8.ReferenciaIzquierda, false);
+        await DibujarCalleEnCanvas(nodo8, nodo8.ReferenciaArriba, false);
+        await DibujarCalleEnCanvas(nodo9, nodo9.ReferenciaIzquierda, false);
+
     }
 
     private void IniciarSimulacion()

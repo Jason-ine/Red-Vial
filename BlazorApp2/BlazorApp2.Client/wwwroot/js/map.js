@@ -75,6 +75,11 @@ export function dibujarCalleIndividual(canvas, calleRecibida) {
 export function dibujarNodoIndividual(canvas, nodoRecibido) {
     let nodo = JSON.parse(nodoRecibido);
     nodo = nodo[0];
+
+    if (!canvas) {
+        return;
+    }
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -105,15 +110,19 @@ export function dibujarNodoIndividual(canvas, nodoRecibido) {
     }
 }
 export function dibujarRutaDeNodos(stringDeNodos, canvasRuta) {
+    if (!canvasRuta) {
+        console.error("Elemento canvas no existe");
+        return;
+    }
     let ctxRuta = canvasRuta.getContext('2d');
     if (!ctxRuta) return;
 
     stringDeNodos = stringDeNodos.trim().replace(/;$/, '');
     let arregloDeNodos = stringDeNodos.split(";");
 
-    let espacioX = 70; // espacio horizontal
-    let x = 50;         // posición inicial x
-    let y = 50;         // posición fija y
+    let espacioX = 70; 
+    let x = 50;         
+    let y = 50;        
     let radio = 20;
 
     for (let i = 0; i < arregloDeNodos.length; i++) {
